@@ -1,0 +1,11 @@
+Falta arreglar el mantenedor, si bien se esta capturando correctamente
+los datos, no se estan actualizando, es como si hubiera un pass
+asi que buscar el error y probar,
+hasta ahora todo lo demas funciona.
+
+faltaria agregar:
+-que funcione por dia actual,
+-que funcione con hora real,
+-agregar campos necesarios al excel (estado_dia) para manejar ausencias,
+-agregar mas funciones al mantenedor(la de manejar ausencias),
+-obviamente falta implementar la base de datos,
