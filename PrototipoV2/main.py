@@ -128,7 +128,7 @@ def mostrar_vista_almuerzos(main_frame):
     botones_frame.grid(row=3, column=0, columnspan=2)
 
      # Cargar la imagen para el botón de borrar
-    image_borrar = Image.open('images/borrar2.jpg')
+    image_borrar = Image.open('PrototipoV2/images/borrar2.jpg')
     image_borrar = image_borrar.resize((40, 40), Image.Resampling.LANCZOS)  # Usar LANCZOS en lugar de ANTIALIAS
     photo_borrar = ImageTk.PhotoImage(image_borrar)
 
@@ -174,7 +174,7 @@ def mostrar_vista_almuerzos(main_frame):
 def main():
     root = tk.Tk()
     root.title("Sistema de Almuerzos del Casino")
-    root.iconbitmap('images/logoKnop.ico')
+    root.iconbitmap('PrototipoV2/images/logoKnop.ico')
     
 
     main_frame = tk.Frame(root)
