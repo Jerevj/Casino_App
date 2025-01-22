@@ -97,7 +97,7 @@ def obtener_almuerzo(entry_rut):
 def mostrar_vista_almuerzo(main_frame, volver_callback):
     """Mostrar la vista para ingresar al casino y obtener el almuerzo."""
     for widget in main_frame.winfo_children():
-        widget.grid_forget()
+        widget.destroy()
 
     tk.Label(main_frame, text="Ingrese su RUT:", font=("Arial", 12)).grid(row=0, column=0, padx=5, pady=5)
     entry_rut = tk.Entry(main_frame, font=("Arial", 12), width=15)

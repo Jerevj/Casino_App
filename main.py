@@ -1,4 +1,4 @@
-from vistas.main_view import mostrar_pantalla_principal
+from vistas.main_view import iniciar_aplicacion
 
-if __name__ == "__main__":
-    mostrar_pantalla_principal()
+# Inicia la aplicación
+iniciar_aplicacion()
