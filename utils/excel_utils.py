@@ -35,7 +35,7 @@ def obtener_menu_sheet():
 import openpyxl
 from tkinter import messagebox
 
-file_path = 'PrototipoV2/Minuta_Diciembre_24.xlsx'
+file_path = 'Minuta_Diciembre_24.xlsx'
 
 def cargar_archivo():
     """Cargar el archivo de Excel y devolver las hojas."""

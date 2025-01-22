@@ -1,0 +1,4 @@
+En este proyecto se esta cambiando la estructura para hacerlo modular
+y mas ordenado, de manera que la mantencion y el entender el funcionamiento
+de la aplicacion  sea mas sencilla y que este todo mas ordenado, se separaron
+archivos y carpetas.
