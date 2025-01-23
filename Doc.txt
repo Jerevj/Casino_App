@@ -1,0 +1,4 @@
+#Doc
+-programacion modular con clases y objetos, v4 solo modular sin clases.
+-apartado de administracion me guio usando de modela este 
+video (estetica y navegacion) https://youtu.be/_zkPVIoqDd8?si=ODF169P8Eq_ixvwx
