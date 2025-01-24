@@ -32,7 +32,7 @@ def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
     canvas.create_line(20, 200, 280, 200, dash=(3, 2))
 
     canvas.create_text(40, 230, text="NOMBRE: ", font=text_font, anchor="w")
-    canvas.create_text(250, 230, text=nombre, font=name_font, anchor="e")
+    canvas.create_text(270, 230, text=nombre, font=name_font, anchor="e")
     canvas.create_text(40, 260, text="RUT: ", font=text_font, anchor="w")
     canvas.create_text(230, 260, text=rut, font=text_font)
 

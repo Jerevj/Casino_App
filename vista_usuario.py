@@ -130,7 +130,6 @@ class VistaUsuario(tk.Frame):
         for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
             if str(row[0].value).startswith(rut):
                 nombre = row[-2].value if row[-2].value else "Sin Nombre"
-                print(f"Nombre obtenido: {nombre}")
                 menu = row[dia_actual].value
 
                 menu_descripcion = menu_sheet.cell(row=2 if menu == 'A' else 3 if menu == 'B' else 4, column=dia_actual + 1).value
