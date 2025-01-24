@@ -1,11 +1,11 @@
 from tkinter import *
 import tkinter as tk
-from extra import Extra
-from menus import Menus
-from personal import Personal
-from menus_inscritos import Menus_inscritos
-from subir import Subir
-from informes import Informes 
+from vistas_admin.extra import Extra
+from vistas_admin.menus import Menus
+from vistas_admin.personal import Personal
+from vistas_admin.menus_inscritos import Menus_inscritos
+from vistas_admin.subir import Subir
+from vistas_admin.informes import Informes 
 import sys
 import os
 
@@ -67,5 +67,7 @@ class Container(tk.Frame):
         self.btn_informes = Button(frame2, fg="black", text="Informes", font="sans 16 bold", command=self.informes)
         self.btn_informes.place(x=736, y=0, width=184, height=40)
 
-        self.btn_informes = Button(frame2, fg="black", text="Extra", font="sans 16 bold", command=self.extra)
-        self.btn_informes.place(x=920, y=0, width=184, height=40)
+        self.btn_extra = Button(frame2, fg="black", text="Extra", font="sans 16 bold", command=self.extra)
+        self.btn_extra.place(x=920, y=0, width=184, height=40)
+
+        self.buttons = [self.btn_menus, self.btn_personal, self.btn_menus_inscritos, self.btn_subir, self.btn_informes, self.btn_extra]

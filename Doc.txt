@@ -2,3 +2,18 @@
 -programacion modular con clases y objetos, v4 solo modular sin clases.
 -apartado de administracion me guio usando de modela este 
 video (estetica y navegacion) https://youtu.be/_zkPVIoqDd8?si=ODF169P8Eq_ixvwx
+
+-se abre el index y llama a la vista inicio, la cual muestra 2 opciones
+que son los unicos 2 modos que se usaran, vista para usuario(ingreso
+casino) y la vista para administracion(rrhh) donde estaran los mantenedores,
+informes, subir y extraer excels y todo lo que se me solicite poner para
+los administradores.
+
+el inicio llama al modo que se seleccione, admin debe pedir contraseña,
+tiene un container donde me muestra las distintas opciones arriba,
+simulando un navbar 
+y la otra opcion es el panel numerico que solo perimitira ingresar
+la clave y dara la boleta, hay que hacer varias validaciones y manejar
+bien cualquier posible error, mala impresion de la boleta, no repetir
+boleta, cada boleta tiene su id, para llevar registro e informes diarios
+y mensuales. 
