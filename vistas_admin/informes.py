@@ -8,4 +8,6 @@ class Informes(tk.Frame):
         self.widgets()
 
     def widgets(self):
-        pass
+        # Agregar una etiqueta para confirmar que la ventana se muestra
+        mensaje = tk.Label(self, text="¡Ventana Informes cargada correctamente!", font=("Arial", 16))
+        mensaje.pack(pady=20)  # Añadir un poco de espacio alrededor del texto

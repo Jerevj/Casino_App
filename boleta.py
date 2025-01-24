@@ -1,12 +1,15 @@
-# boleta.py
 import tkinter as tk
 from tkinter import Canvas
 from tkinter.font import Font
+from random import randint
 
 def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
     """Crear la ventana de la boleta de almuerzo con el formato proporcionado."""
-    nombre_parts = nombre.split()
-    nombre = f"{nombre_parts[1]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
+    if " " in nombre:  # Reordena si hay más de una palabra
+        nombre_parts = nombre.split()
+        nombre = f"{nombre_parts[2]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
+    else:
+        nombre = nombre  # Deja el nombre tal cual si tiene una sola palabra
 
     root = tk.Tk()
     root.title("Boleta de Almuerzo")
@@ -38,6 +41,6 @@ def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
 
     barcode_y = 360
     for i in range(20, 280, 10):
-        canvas.create_line(i, barcode_y, i, barcode_y + 30, width=2)
-
+        altura = randint(20, 40)
+        canvas.create_line(i, barcode_y, i, barcode_y + altura, width=2)
     root.mainloop()
