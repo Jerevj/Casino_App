@@ -22,7 +22,7 @@ class Menus(tk.Frame):
 
         # Scrollbar horizontal (lo colocamos arriba)
         self.scrollbar_horizontal = ttk.Scrollbar(self.main_frame, orient=tk.HORIZONTAL)
-        self.scrollbar_horizontal.pack(side=tk.TOP, fill=tk.X)
+        self.scrollbar_horizontal.pack(side=tk.BOTTOM, fill=tk.X)
 
         # Canvas para manejar el desplazamiento
         self.canvas = tk.Canvas(self.main_frame, xscrollcommand=self.scrollbar_horizontal.set)

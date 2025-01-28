@@ -13,19 +13,51 @@ class Container(tk.Frame):
     def __init__(self, padre, controlador):
         super().__init__(padre)
         self.controlador = controlador
-        self.pack()
-        self.place(x=0,y=0, width=1100, height=650)
-        self.widgets()
+        self.grid(row=0, column=0, sticky="nsew")  # Usamos grid para el contenedor principal
+
         self.frames = {}
         self.buttons = []
-        for i in (Menus, Personal, Menus_inscritos, Subir ,Informes, Extra):
+
+        # Crea el navbar usando un Frame
+        frame_navbar = tk.Frame(self, bg="lightblue")
+        frame_navbar.grid(row=0, column=0, sticky="ew")  # Coloca el navbar en la primera fila
+
+        # Aquí vamos a colocar los botones en una sola fila en el navbar
+        self.btn_menus = Button(frame_navbar, fg="black", text="Menus", font="sans 16 bold", command=self.menus)
+        self.btn_menus.grid(row=0, column=0, sticky="ew")  # Usamos grid para cada botón
+
+        self.btn_personal = Button(frame_navbar, fg="black", text="Personal", font="sans 16 bold", command=self.personal)
+        self.btn_personal.grid(row=0, column=1, sticky="ew")
+
+        self.btn_menus_inscritos = Button(frame_navbar, fg="black", text="Menus Inscritos", font="sans 16 bold", command=self.menus_inscritos)
+        self.btn_menus_inscritos.grid(row=0, column=2, sticky="ew")
+
+        self.btn_subir = Button(frame_navbar, fg="black", text="Subir", font="sans 16 bold", command=self.subir)
+        self.btn_subir.grid(row=0, column=3, sticky="ew")
+
+        self.btn_informes = Button(frame_navbar, fg="black", text="Informes", font="sans 16 bold", command=self.informes)
+        self.btn_informes.grid(row=0, column=4, sticky="ew")
+
+        self.btn_extra = Button(frame_navbar, fg="black", text="Extra", font="sans 16 bold", command=self.extra)
+        self.btn_extra.grid(row=0, column=5, sticky="ew")
+
+        # Ahora configuramos el contenedor principal para que los frames (contenido) se ajusten correctamente
+        self.frames = {}
+        for i in (Menus, Personal, Menus_inscritos, Subir, Informes, Extra):
             frame = i(self)
             self.frames[i] = frame
-            #frame.pack()
-            frame.config(bg="#C6D9E3", highlightbackground = "gray", highlightthickness=1)
-            frame.place(x=0,y=40, width=1100, height= 650)
+            frame.grid(row=1, column=0, sticky="nsew")  # Contenido debajo del navbar
         self.show_frames(Menus)
-    
+
+        # Hacemos que las filas y columnas se expandan
+        self.grid_rowconfigure(0, weight=0)  # La primera fila (navbar) no se expande
+        self.grid_rowconfigure(1, weight=1)  # La segunda fila (contenido) se expande
+        self.grid_columnconfigure(0, weight=1)  # Columna 0 (todo el ancho)
+
+        # Configuramos las columnas del navbar para que se expandan
+        for i in range(6):  # Se asume que hay 6 botones
+            frame_navbar.grid_columnconfigure(i, weight=1)  # Asignamos el mismo peso a cada columna del navbar
+
     def show_frames(self, container):
         frame = self.frames[container]
         frame.tkraise()
@@ -35,10 +67,10 @@ class Container(tk.Frame):
 
     def menus_inscritos(self):
         self.show_frames(Menus_inscritos)
-    
+
     def personal(self):
         self.show_frames(Personal)
-    
+
     def subir(self):
         self.show_frames(Subir)
 
@@ -48,26 +80,23 @@ class Container(tk.Frame):
     def extra(self):
         self.show_frames(Extra)
 
-    def widgets(self):
-        frame2 = tk.Frame(self)
-        frame2.place(x=0,y=0,width=1100,height=40)
 
-        self.btn_menus = Button(frame2, fg="black", text="Menus", font="sans 16 bold", command=self.menus)
-        self.btn_menus.place(x=0, y=0, width=184, height=40)
+'''    def widgets(self):
+        navbar = Frame(self, bg="#ddd")
+        navbar.grid(row=0, column=0, sticky="ew")
 
-        self.btn_personal = Button(frame2, fg="black", text="Personal", font="sans 16 bold", command=self.personal)
-        self.btn_personal.place(x=184, y=0, width=184, height=40)
+        buttons = [
+            ("Menus", Menus),
+            ("Personal", Personal),
+            ("Menus Inscritos", Menus_inscritos),
+            ("Subir", Subir),
+            ("Informes", Informes),
+            ("Extra", Extra),
+        ]
 
-        self.btn_menus_inscritos = Button(frame2, fg="black", text="Menus Inscritos", font="sans 16 bold", command=self.menus_inscritos)
-        self.btn_menus_inscritos.place(x=368, y=0, width=184, height=40)
+        for idx, (text, frame) in enumerate(buttons):
+            btn = Button(navbar, text=text, command=lambda f=frame: self.show_frame(f))
+            btn.grid(row=0, column=idx, padx=2, pady=2)
 
-        self.btn_subir = Button(frame2, fg="black", text="Subir", font="sans 16 bold", command=self.subir)
-        self.btn_subir.place(x=552, y=0, width=184, height=40)
-
-        self.btn_informes = Button(frame2, fg="black", text="Informes", font="sans 16 bold", command=self.informes)
-        self.btn_informes.place(x=736, y=0, width=184, height=40)
-
-        self.btn_extra = Button(frame2, fg="black", text="Extra", font="sans 16 bold", command=self.extra)
-        self.btn_extra.place(x=920, y=0, width=184, height=40)
-
-        self.buttons = [self.btn_menus, self.btn_personal, self.btn_menus_inscritos, self.btn_subir, self.btn_informes, self.btn_extra]
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)'''

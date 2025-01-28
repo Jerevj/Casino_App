@@ -8,7 +8,7 @@ class Inicio(tk.Tk):
         super().__init__()
         self.title("Casino - Selección de Modo")
         self.geometry("400x300+400+200")
-        self.resizable(False, False)
+        self.resizable(True, True)
         self.config(bg="lightblue")
 
         # Título
@@ -28,7 +28,7 @@ class Inicio(tk.Tk):
         self.destroy()  # Cierra la ventana actual
         app = tk.Tk()  # Crea una nueva ventana principal para el modo usuario
         vista_usuario = VistaUsuario(app, self)  # Pasa la nueva ventana y el controlador (self)
-        vista_usuario.pack()  # Empaqueta el frame
+        vista_usuario.pack(fill="both", expand=True)  # Empaqueta el frame
         app.mainloop()
         
         """#Abrir una nueva ventana para el modo usuario sin destruir la ventana principal.

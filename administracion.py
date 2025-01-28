@@ -11,16 +11,21 @@ class Administracion(Tk):
         super().__init__(*args, **kwagrs)
         self.title("Administracion Casino")
         self.geometry("1100x650+120+20")
-        self.resizable(False, False)
+        self.resizable(True, True)
 
         container = Frame(self)
         container.pack(side=TOP, fill=BOTH, expand=True)
         container.configure(bg="lightblue")
 
         self.frames = {}
+        frame = Container(container, self)
+        self.frames[Container] = frame
+        frame.pack(fill=BOTH, expand=True)
+
+        '''self.frames = {}
         for i in (Login, Registro, Container):
             frame = i(container, self)
-            self.frames[i]= frame
+            self.frames[i]= frame'''
 
         self.show_frame(Container)
 
