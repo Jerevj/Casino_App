@@ -1,8 +1,10 @@
 import tkinter as tk
+import pandas as pd
+from utils.excel_utils import excel_manager  # Importamos la instancia de ExcelManager
 from tkinter import messagebox
 from datetime import datetime
-from utils.excel_utils import excel_manager
-from boleta import crear_boleta  # Función para generar la boleta
+from boleta import crear_boleta
+from conexion import Conexion  # Importa la clase Conexion
 from PIL import Image, ImageTk
 
 # Variable global para el campo activo
@@ -17,7 +19,7 @@ def agregar_digit(digit):
     """Agrega un dígito al campo activo."""
     if campo_activo:  # Si hay un campo activo
         campo_actual = campo_activo.get()
-        if len(campo_actual) < 8:  # Limitar a 8 dígitos para el RUT
+        if len(campo_actual) < 4:  # Limitar a 4 dígitos para la clave
             campo_activo.insert(tk.END, digit)
 
 def borrar_digit():
@@ -30,13 +32,13 @@ def borrar_todo():
     if campo_activo:
         campo_activo.delete(0, tk.END)
 
-def validar_rut(entry_rut):
-    """Valida el RUT ingresado."""
-    rut = entry_rut.get()
-    if len(rut) != 8:
-        messagebox.showerror("Error", "El RUT debe ser de 8 dígitos.")
+def validar_clave(validar_clave):
+    """Valida la clave de 4 dígitos ingresada, que es parte del RUT."""
+    clave = validar_clave.get()
+    if len(clave) != 4 or not clave.isdigit():  # Validamos que tenga 4 dígitos y que sean numéricos
+        messagebox.showerror("Error", "La clave debe ser de 4 dígitos numéricos.")
         return None
-    return rut
+    return clave
 
 class VistaUsuario(tk.Frame):
     def __init__(self, padre, controlador):
@@ -44,7 +46,14 @@ class VistaUsuario(tk.Frame):
         self.controlador = controlador
         self.pack()
         self.place(x=0, y=0, width=1100, height=650)
+        
+        # Crear una instancia de la clase Conexion
+        self.db = Conexion()
+        self.db.conectar()  # Conectar a la base de datos
         self.widgets()
+
+         # Manejar el cierre de la ventana
+        self.master.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
 
     def widgets(self):
         """Crea los widgets para la vista de usuario."""
@@ -55,10 +64,10 @@ class VistaUsuario(tk.Frame):
         tk.Label(self, text="Ingrese su RUT:", font=fuente_grande).grid(row=0, column=0, padx=10, pady=10)
         
         # Campo de entrada
-        self.entry_rut = tk.Entry(self, font=fuente_grande, width=15)
-        self.entry_rut.grid(row=0, column=1, padx=10, pady=10)
-        self.entry_rut.bind("<FocusIn>", lambda event: set_campo_activo(self.entry_rut))
-        self.entry_rut.focus_set()  # Seleccionar automáticamente el Entry
+        self.validar_clave = tk.Entry(self, font=fuente_grande, width=15)
+        self.validar_clave.grid(row=0, column=1, padx=10, pady=10)
+        self.validar_clave.bind("<FocusIn>", lambda event: set_campo_activo(self.validar_clave))
+        self.validar_clave.focus_set()  # Seleccionar automáticamente el Entry
 
         # Botones numéricos
         botones_frame = tk.Frame(self)
@@ -70,21 +79,7 @@ class VistaUsuario(tk.Frame):
             ('7', 2, 0), ('8', 2, 1), ('9', 2, 2),
             ('0', 3, 0), ('C', 3, 1), ('<-', 3, 2)
         ]
-        '''
-        # Usando PIL para cargar una imagen JPG y convertirla a formato compatible
-        imagen_retroceder = Image.open("images/borrar2.jpg")
-        # Redimensionamos la imagen para que encaje bien en el botón
-        imagen_retroceder = imagen_retroceder.resize((100, 100))  # Cambia el tamaño según lo necesites
-        self.imagen_retroceder = ImageTk.PhotoImage(imagen_retroceder)
 
-        for (text, row, col) in botones:
-            if text == 'C':
-                tk.Button(botones_frame, text=text, font=fuente_grande, command=borrar_todo, width=5, height=2).grid(row=row, column=col, padx=10, pady=10)
-            elif text == '<-':
-                tk.Button(botones_frame, image=self.imagen_retroceder, command=borrar_digit, width=10, height=10, compound="center").grid(row=row, column=col, padx=10, pady=10)
-            else:
-                tk.Button(botones_frame, text=text, font=fuente_grande, command=lambda t=text: agregar_digit(t), width=5, height=2).grid(row=row, column=col, padx=10, pady=10)
-        '''
         # Cargar la imagen para el botón de retroceder
         imagen_retroceder = Image.open("images/borrar2.jpg")
         imagen_retroceder = imagen_retroceder.resize((50, 50), Image.Resampling.LANCZOS)  # Usar LANCZOS en lugar de ANTIALIAS
@@ -116,30 +111,42 @@ class VistaUsuario(tk.Frame):
 
     def obtener_almuerzo(self):
         """Obtener el almuerzo de acuerdo al RUT ingresado."""
-        rut = validar_rut(self.entry_rut)
-        if not rut:
+        clave = validar_clave(self.validar_clave)
+        if not clave:
             return
 
-        sheet = excel_manager.obtener_sheet()
-        menu_sheet = excel_manager.obtener_menu_sheet()
-        empleado_encontrado = False
+        # Imprimir la clave para depurar
+        print(f"Clave ingresada: {clave}")
 
+        # Obtener la fecha actual
         fecha_actual = datetime.now()
         dia_actual = fecha_actual.day
 
-        for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row):
-            if str(row[0].value).startswith(rut):
-                nombre = row[-2].value if row[-2].value else "Sin Nombre"
-                menu = row[dia_actual].value
-
-                menu_descripcion = menu_sheet.cell(row=2 if menu == 'A' else 3 if menu == 'B' else 4, column=dia_actual + 1).value
-                if not menu_descripcion:
-                    menu_descripcion = "Menú no asignado"
-
-                id_boleta = f"{fecha_actual.strftime('%Y%m%d')}{rut}"
-                crear_boleta(menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), menu_descripcion, id_boleta)
-                empleado_encontrado = True
-                break
-
-        if not empleado_encontrado:
-            messagebox.showerror("Error", "RUT no encontrado o no tiene menú para este día.")
+        # Buscar el RUT en la base de datos
+        persona = self.db.obtener_persona_por_clave(clave)
+        
+        if persona:
+            print(f"Empleado encontrado: {persona[1]}")  # Persona[1] es el nombre del empleado
+            
+            # Buscar el menú en el Excel
+            menu_data = excel_manager.obtener_menu_desde_excel(persona[0], dia_actual)  # persona[0] es el RUT
+            
+            if menu_data:
+                # Aquí puedes obtener los datos del menú y pasarlos a la función para generar la boleta
+                menu = menu_data[2]  # Menu (campo de la tabla menus_registrados)
+                nombre_menu = menu_data[3]  # Nombre del menú
+                
+                # Generar boleta
+                id_boleta = f"{fecha_actual.strftime('%Y%m%d')}{clave}"
+                crear_boleta(menu, persona[1], persona[0], fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
+                print("Boleta generada.")
+            else:
+                messagebox.showerror("Error", "No hay menú asignado para este día.")
+        else:
+            messagebox.showerror("Error", "RUT no encontrado.")
+    
+    def cerrar_ventana(self):
+        """Llamar al método para cerrar la conexión antes de cerrar la ventana."""
+        print("Cerrando la ventana...")
+        self.db.desconectar()  # Cerrar la conexión de la base de datos
+        self.master.destroy()  # Cerrar la ventana
