@@ -1,10 +1,19 @@
 # utils/excel_utils.py
 
+import os
 from openpyxl import load_workbook
 from tkinter import messagebox
 
 class ExcelManager:
     def __init__(self, minuta_file_path, menus_file_path):
+        if not os.path.exists(minuta_file_path):
+            messagebox.showerror("Error", f"No se encontró el archivo: {minuta_file_path}")
+            return
+        
+        if not os.path.exists(menus_file_path):
+            messagebox.showerror("Error", f"No se encontró el archivo: {menus_file_path}")
+            return
+        
         self.minuta_file_path = minuta_file_path
         self.menus_file_path = menus_file_path
         self.minuta_wb = None
@@ -65,9 +74,9 @@ class ExcelManager:
             print(f"Fecha en la fila: {fecha}")  # Depuración de la fecha
             
             # Verificar que la fecha tenga al menos 2 caracteres antes de intentar extraer el día
-            if len(fecha) < 2:
+            if not fecha or not isinstance(fecha, str) or len(fecha) < 2:
                 print(f"Fecha inválida en la fila: {fecha}. Saltando esta fila.")
-                continue  # Saltar filas con fechas inválidas
+                continue # Saltar filas con fechas inválidas
             
             try:
                 dia_mes_menu = int(fecha[-2:])  # Extraer los dos últimos dígitos (día del mes)
@@ -79,16 +88,24 @@ class ExcelManager:
             if dia_mes_menu == dia:
                 # Buscar la opción A, B o C
                 if opcion_menu == 'A':
-                    return row[2]  # El nombre del menú A está en la tercera columna
+                    return row[1]  # El nombre del menú A está en la segunda columna
                 elif opcion_menu == 'B':
-                    return row[3]  # El nombre del menú B está en la cuarta columna
+                    return row[2]  # El nombre del menú B está en la terncera columna
                 elif opcion_menu == 'C':
-                    return row[4]  # El nombre del menú C está en la quinta columna
+                    return row[3]  # El nombre del menú C está en la cuarta columna
                 else:
                     print(f"Opción de menú {opcion_menu} no válida.")
                     return None  # Si la opción no es A, B o C
         print(f"Menú con opción {opcion_menu} no encontrado para el día {dia}.")
         return None
+    
+    def obtener_minuta_sheet(self):
+        """Devuelve la hoja activa del archivo 'Minuta_Actual.xlsx' si está cargado correctamente."""
+        if self.minuta_ws is None:
+            messagebox.showerror("Error", "No se pudo obtener la hoja de Minuta_Actual.xlsx. Asegúrate de que el archivo existe y está bien estructurado.")
+            return None
+        return self.minuta_ws
+
 
 
 

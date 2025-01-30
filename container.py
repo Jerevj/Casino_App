@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 from vistas_admin.extra import Extra
-from vistas_admin.menus import Menus
+from vistas_admin.minutas import Minutas
 from vistas_admin.personal import Personal
 from vistas_admin.menus_inscritos import Menus_inscritos
 from vistas_admin.subir import Subir
@@ -23,8 +23,8 @@ class Container(tk.Frame):
         frame_navbar.grid(row=0, column=0, sticky="ew")  # Coloca el navbar en la primera fila
 
         # Aquí vamos a colocar los botones en una sola fila en el navbar
-        self.btn_menus = Button(frame_navbar, fg="black", text="Menus", font="sans 16 bold", command=self.menus)
-        self.btn_menus.grid(row=0, column=0, sticky="ew")  # Usamos grid para cada botón
+        self.btn_Minutas = Button(frame_navbar, fg="black", text="Minutas", font="sans 16 bold", command=self.Minutas)
+        self.btn_Minutas.grid(row=0, column=0, sticky="ew")  # Usamos grid para cada botón
 
         self.btn_personal = Button(frame_navbar, fg="black", text="Personal", font="sans 16 bold", command=self.personal)
         self.btn_personal.grid(row=0, column=1, sticky="ew")
@@ -43,11 +43,11 @@ class Container(tk.Frame):
 
         # Ahora configuramos el contenedor principal para que los frames (contenido) se ajusten correctamente
         self.frames = {}
-        for i in (Menus, Personal, Menus_inscritos, Subir, Informes, Extra):
+        for i in (Minutas, Personal, Menus_inscritos, Subir, Informes, Extra):
             frame = i(self)
             self.frames[i] = frame
             frame.grid(row=1, column=0, sticky="nsew")  # Contenido debajo del navbar
-        self.show_frames(Menus)
+        self.show_frames(Minutas)
 
         # Hacemos que las filas y columnas se expandan
         self.grid_rowconfigure(0, weight=0)  # La primera fila (navbar) no se expande
@@ -62,8 +62,8 @@ class Container(tk.Frame):
         frame = self.frames[container]
         frame.tkraise()
 
-    def menus(self):
-        self.show_frames(Menus)
+    def Minutas(self):
+        self.show_frames(Minutas)
 
     def menus_inscritos(self):
         self.show_frames(Menus_inscritos)
