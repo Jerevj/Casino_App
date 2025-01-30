@@ -1,6 +1,7 @@
-import openpyxl
+# utils/excel_utils.py
+
+from openpyxl import load_workbook
 from tkinter import messagebox
-import pandas as pd
 
 class ExcelManager:
     def __init__(self, minuta_file_path, menus_file_path):
@@ -8,100 +9,90 @@ class ExcelManager:
         self.menus_file_path = menus_file_path
         self.minuta_wb = None
         self.menus_wb = None
-        self.minuta_sheet = None
-        self.menus_sheet = None
+        self.minuta_ws = None
+        self.menus_ws = None
         self.cargar_archivos()
 
     def cargar_archivos(self):
-        """Cargar ambos archivos de Excel."""
+        """Carga los archivos de Excel usando openpyxl."""
         try:
-            # Cargar el archivo 'Minuta_Actual'
-            self.minuta_wb = openpyxl.load_workbook(self.minuta_file_path)
-            self.minuta_sheet = self.minuta_wb.active  # Suposición: la hoja activa contiene los datos de minuta
-
-            # Cargar el archivo 'Menus'
-            self.menus_wb = openpyxl.load_workbook(self.menus_file_path)
-            self.menus_sheet = self.menus_wb.active  # Suposición: la hoja activa contiene los menús
-
+            self.minuta_wb = load_workbook(self.minuta_file_path)
+            self.minuta_ws = self.minuta_wb.active  # Asumimos que los datos están en la primera hoja
         except Exception as e:
-            print(f"Error al cargar los archivos de Excel: {e}")
-            messagebox.showerror("Error", "Hubo un problema al cargar los archivos de Excel.")
-
-    def obtener_minuta_wb(self):
-        """Retorna el libro de trabajo de Minuta."""
-        return self.minuta_wb
-
-    def obtener_menus_wb(self):
-        """Retorna el libro de trabajo de Menús."""
-        return self.menus_wb
-
-    def obtener_minuta_sheet(self):
-        """Retorna la hoja de datos de empleados y menús seleccionados."""
-        return self.minuta_sheet
-
-    def obtener_menus_sheet(self):
-        """Retorna la hoja de menús disponibles."""
-        return self.menus_sheet
-
-    '''def obtener_menu_desde_excel(self, rut, dia):
-        """Obtiene el menú de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
+            print(f"Error al cargar 'Minuta_Actual.xlsx': {e}")
+            messagebox.showerror("Error", "No se pudo cargar el archivo 'Minuta_Actual.xlsx'.")
+            self.minuta_wb = None
+        
         try:
-            df = pd.read_excel(self.minuta_file_path, dtype=str)
-
-            fila = df[df.iloc[:, 0] == rut]  # Asumiendo que la primera columna es RUT
-            if fila.empty:
-                print(f"RUT {rut} no encontrado en el Excel.")
-                return None
-            
-            columna_dia = str(dia)
-            if columna_dia not in df.columns:
-                print(f"No se encontró la columna para el día {dia}.")
-                return None
-
-            menu = fila[columna_dia].values[0]
-            return menu
-
+            self.menus_wb = load_workbook(self.menus_file_path)
+            self.menus_ws = self.menus_wb.active  # Asumimos que los menús están en la primera hoja
         except Exception as e:
-            print(f"Error al leer el Excel: {e}")
-            return None'''
+            print(f"Error al cargar 'Menus_Actual.xlsx': {e}")
+            messagebox.showerror("Error", "No se pudo cargar el archivo 'Menus_Actual.xlsx'.")
+            self.menus_wb = None
+
     def obtener_menu_desde_excel(self, rut, dia):
-        """Obtiene el menú de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
-        try:
-            df = pd.read_excel(self.minuta_file_path, header=0, dtype=str)
-            
-            # Imprimir todo el dataframe para inspección
-            print(df)
-
-            # Limpiar posibles espacios en los nombres de las columnas
-            df.columns = df.columns.str.strip()
-
-            print("Encabezados de columnas:", df.columns.tolist())  # Imprime las columnas para depuración
-
-            fila = df[df['Rut'] == rut]  # Asegúrate de que 'Rut' esté presente en las columnas
-            if fila.empty:
-                print(f"RUT {rut} no encontrado en el Excel.")
-                return None
-            
-            # Asegurarse de que el día esté presente como columna
-            columna_dia = str(dia)  # Asegúrate de que sea un string
-            if columna_dia not in df.columns:
-                print(f"No se encontró la columna para el día {dia}.")
-                return None
-
-            menu = fila[columna_dia].values[0]
-            return menu
-
-        except Exception as e:
-            print(f"Error al leer el Excel: {e}")
+        """Obtiene la opción de menú (A, B, C) de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
+        if self.minuta_ws is None:
+            print("El archivo 'Minuta_Actual.xlsx' no está cargado correctamente.")
             return None
+        
+        # Buscar la fila con el RUT correspondiente
+        for row in self.minuta_ws.iter_rows(min_row=2, values_only=True):  # Asumimos que la primera fila es el encabezado
+            if str(row[0]) == str(rut):  # Comparar el RUT
+                columna_dia = str(dia)  # Asegurar que el día sea string
+                # Buscar el día en los encabezados
+                for col_num, cell in enumerate(list(self.minuta_ws.iter_rows(min_row=1, max_row=1, values_only=True))[0]):
+                    if str(cell) == columna_dia:  # Buscar el día en los encabezados
+                        menu = row[col_num]  # Obtener la opción A, B o C
+                        if menu:
+                            return menu
+                        else:
+                            print(f"No hay menú asignado para el RUT {rut} el día {dia}.")
+                            return None
+        print(f"RUT {rut} no encontrado en el Excel.")
+        return None
+
+    def obtener_nombre_menu(self, dia, opcion_menu):
+        """Obtiene el nombre del menú a partir de la opción (A, B o C) desde 'Menus_Actual.xlsx'."""
+        if self.menus_ws is None:
+            print("El archivo 'Menus_Actual.xlsx' no está cargado correctamente.")
+            return None
+        
+        # Buscar la opción (A, B o C) en las filas y devolver el nombre del menú
+        for row in self.menus_ws.iter_rows(min_row=2, values_only=True):  # Asumimos que la primera fila es el encabezado
+            fecha = str(row[0])  # Convertir la fecha a string para evitar problemas de formato
+            print(f"Fecha en la fila: {fecha}")  # Depuración de la fecha
+            
+            # Verificar que la fecha tenga al menos 2 caracteres antes de intentar extraer el día
+            if len(fecha) < 2:
+                print(f"Fecha inválida en la fila: {fecha}. Saltando esta fila.")
+                continue  # Saltar filas con fechas inválidas
+            
+            try:
+                dia_mes_menu = int(fecha[-2:])  # Extraer los dos últimos dígitos (día del mes)
+            except ValueError:
+                print(f"Fecha no válida en la fila: {fecha}. No se puede extraer el día.")
+                continue  # Si no se puede convertir los últimos dos dígitos a entero, saltamos la fila
+            
+            # Comparar el día del mes con el día actual (dia_mes)
+            if dia_mes_menu == dia:
+                # Buscar la opción A, B o C
+                if opcion_menu == 'A':
+                    return row[2]  # El nombre del menú A está en la tercera columna
+                elif opcion_menu == 'B':
+                    return row[3]  # El nombre del menú B está en la cuarta columna
+                elif opcion_menu == 'C':
+                    return row[4]  # El nombre del menú C está en la quinta columna
+                else:
+                    print(f"Opción de menú {opcion_menu} no válida.")
+                    return None  # Si la opción no es A, B o C
+        print(f"Menú con opción {opcion_menu} no encontrado para el día {dia}.")
+        return None
 
 
 
-
-
-
-
-# Instanciamos el objeto global
+# Crear la instancia global de ExcelManager
 excel_manager = ExcelManager(
     "C:/Users/practicainformatica/Desktop/CarpetaExcel/Minuta_Actual.xlsx", 
     "C:/Users/practicainformatica/Desktop/CarpetaExcel/Menus_Actual.xlsx"
