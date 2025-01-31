@@ -13,7 +13,7 @@ class Minutas(tk.Frame):
 
     def widgets(self):
         # Título de la ventana
-        titulo = tk.Label(self, text="Gestión de Minutas", font=("Arial", 20, "bold"))
+        titulo = tk.Label(self, text="Gestión de Menús seleccionados", font=("Arial", 20, "bold"))
         titulo.pack(pady=20)
 
         # Frame principal que contiene la tabla y los Scrollbars
