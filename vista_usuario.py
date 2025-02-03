@@ -104,33 +104,43 @@ class VistaUsuario(tk.Frame):
         fecha_actual = datetime.now()
         dia_mes = fecha_actual.day  # Extrae solo el día
 
-        # Buscar la persona en la base de datos
-        persona = self.db.obtener_persona_por_clave(clave)
-        
-        if persona:
-            rut = persona[0]
-            nombre = persona[1]
-            print(f"Empleado encontrado: {nombre} (RUT: {rut})")
+        try:
+            # Buscar la persona en la base de datos
+            persona = self.db.obtener_persona_por_clave(clave)
+            
+            if persona:
+                rut = persona[0]
+                nombre = persona[1]
+                print(f"Empleado encontrado: {nombre} (RUT: {rut})")
 
-            # Buscar la opción de menú en el Excel
-            opcion_menu = excel_manager.obtener_menu_desde_excel(rut, dia_mes)
-            if opcion_menu:
-                # Obtener el nombre del menú
-                nombre_menu = excel_manager.obtener_nombre_menu(dia_mes, opcion_menu)
-                if nombre_menu:
-                    # Generar boleta
-                    id_boleta = f"{fecha_actual.strftime('%Y%m%d')}{clave}"
-                    crear_boleta(opcion_menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
-                    print("Boleta generada.")
+                # Buscar la opción de menú en el Excel
+                opcion_menu = excel_manager.obtener_menu_desde_excel(rut, dia_mes)
+                if opcion_menu:
+                    # Obtener el nombre del menú
+                    nombre_menu = excel_manager.obtener_nombre_menu(dia_mes, opcion_menu)
+                    if nombre_menu:
+                        # Generar boleta
+                        id_boleta = f"{fecha_actual.strftime('%Y%m%d')}{clave}"
+                        crear_boleta(opcion_menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
+                        print("Boleta generada.")
+                    else:
+                        messagebox.showerror("Error", "No se encontró el nombre del menú.")
                 else:
-                    messagebox.showerror("Error", "No se encontró el nombre del menú.")
+                    messagebox.showerror("Error", "No hay menú asignado para este día.")
             else:
-                messagebox.showerror("Error", "No hay menú asignado para este día.")
-        else:
-            messagebox.showerror("Error", "Clave no encontrada.")
+                messagebox.showerror("Error", "Clave no encontrada.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Hubo un error al obtener el almuerzo: {e}")
+        finally:
+            self.db.desconectar()  # Aseguramos que la conexión se cierre después de la operación
 
     def cerrar_ventana(self):
         """Cierra la conexión antes de cerrar la ventana."""
         print("Cerrando la ventana...")
         self.db.desconectar()
         self.master.destroy()
+
+    def __del__(self):
+        """Asegurarse de que la conexión se cierre si no se llama a cerrar_ventana explícitamente."""
+        self.db.desconectar()
+        print("Base de datos desconectada")

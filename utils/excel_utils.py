@@ -106,6 +106,11 @@ class ExcelManager:
             return None
         return self.minuta_ws
 
+    def obtener_ruta_minuta(self):
+        return self.minuta_file_path
+    
+    def obtener_ruta_menus(self):
+        return self.menus_file_path
 
 
 
