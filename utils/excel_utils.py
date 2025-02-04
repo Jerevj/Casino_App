@@ -1,5 +1,3 @@
-# utils/excel_utils.py
-
 import os
 from openpyxl import load_workbook
 from tkinter import messagebox
@@ -40,6 +38,10 @@ class ExcelManager:
             messagebox.showerror("Error", "No se pudo cargar el archivo 'Menus_Actual.xlsx'.")
             self.menus_wb = None
 
+    def recargar_archivos(self):
+        """Recarga los archivos de Excel para reflejar los cambios."""
+        self.cargar_archivos()
+
     def obtener_menu_desde_excel(self, rut, dia):
         """Obtiene la opción de menú (A, B, C) de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
         if self.minuta_ws is None:
@@ -68,37 +70,46 @@ class ExcelManager:
             print("El archivo 'Menus_Actual.xlsx' no está cargado correctamente.")
             return None
         
-        # Buscar la opción (A, B o C) en las filas y devolver el nombre del menú
-        for row in self.menus_ws.iter_rows(min_row=2, values_only=True):  # Asumimos que la primera fila es el encabezado
-            fecha = str(row[0])  # Convertir la fecha a string para evitar problemas de formato
-            print(f"Fecha en la fila: {fecha}")  # Depuración de la fecha
+        # Iterar sobre las filas (asumiendo que la primera fila es el encabezado)
+        for row in self.menus_ws.iter_rows(min_row=2, values_only=True):
+            fecha_cell = row[0]
+            # Si la celda está vacía, saltar sin imprimir mensajes
+            if not fecha_cell:
+                continue
+
+            fecha = str(fecha_cell)
             
-            # Verificar que la fecha tenga al menos 2 caracteres antes de intentar extraer el día
-            if not fecha or not isinstance(fecha, str) or len(fecha) < 2:
-                print(f"Fecha inválida en la fila: {fecha}. Saltando esta fila.")
-                continue # Saltar filas con fechas inválidas
-            
+            # Verificar que la fecha tenga exactamente 8 caracteres (formato yyyymmdd)
+            if len(fecha) != 8:
+                # Podrías imprimir un mensaje de depuración una sola vez o simplemente omitirlo
+                # print(f"Fecha inválida en la fila: {fecha}. Saltando esta fila.")
+                continue
+
             try:
-                dia_mes_menu = int(fecha[-2:])  # Extraer los dos últimos dígitos (día del mes)
+                # Extraer los dos últimos dígitos que corresponden al día del mes
+                dia_mes_menu = int(fecha[-2:])
             except ValueError:
-                print(f"Fecha no válida en la fila: {fecha}. No se puede extraer el día.")
-                continue  # Si no se puede convertir los últimos dos dígitos a entero, saltamos la fila
-            
-            # Comparar el día del mes con el día actual (dia_mes)
+                # Si ocurre un error al convertir, saltamos la fila
+                # print(f"Fecha no válida en la fila: {fecha}. No se puede extraer el día.")
+                continue
+
+            # Comparar el día del mes con el día buscado
             if dia_mes_menu == dia:
-                # Buscar la opción A, B o C
+                # Dependiendo de la opción de menú (A, B o C) se devuelve la columna correspondiente
                 if opcion_menu == 'A':
-                    return row[1]  # El nombre del menú A está en la segunda columna
+                    return row[1]  # Menú A en la segunda columna
                 elif opcion_menu == 'B':
-                    return row[2]  # El nombre del menú B está en la terncera columna
+                    return row[2]  # Menú B en la tercera columna
                 elif opcion_menu == 'C':
-                    return row[3]  # El nombre del menú C está en la cuarta columna
+                    return row[3]  # Menú C en la cuarta columna
                 else:
                     print(f"Opción de menú {opcion_menu} no válida.")
-                    return None  # Si la opción no es A, B o C
-        print(f"Menú con opción {opcion_menu} no encontrado para el día {dia}.")
-        return None
-    
+                    return "Opción de menú no válida"
+
+        # Si se terminó el ciclo sin encontrar una fila que cumpla, se informa que no hay menú
+        print(f"No hay menú para el día {dia} con la opción {opcion_menu}.")
+        return "No hay menú disponible para este día."
+
     def obtener_minuta_sheet(self):
         """Devuelve la hoja activa del archivo 'Minuta_Actual.xlsx' si está cargado correctamente."""
         if self.minuta_ws is None:
@@ -111,8 +122,6 @@ class ExcelManager:
     
     def obtener_ruta_menus(self):
         return self.menus_file_path
-
-
 
 # Crear la instancia global de ExcelManager
 excel_manager = ExcelManager(

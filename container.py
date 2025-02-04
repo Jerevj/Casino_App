@@ -37,7 +37,6 @@ class Container(tk.Frame):
 
         self.btn_informes = Button(frame_navbar, fg="black", text="Informes", font="sans 16 bold", command=self.informes)
         self.btn_informes.grid(row=0, column=4, sticky="ew")
-
         self.btn_extra = Button(frame_navbar, fg="black", text="Extra", font="sans 16 bold", command=self.extra)
         self.btn_extra.grid(row=0, column=5, sticky="ew")
 
@@ -61,6 +60,11 @@ class Container(tk.Frame):
     def show_frames(self, container):
         frame = self.frames[container]
         frame.tkraise()
+        # Asegurarse de recargar los datos cuando se muestra el frame
+        if hasattr(frame, 'cargar_minutas'):
+            frame.cargar_minutas()
+        elif hasattr(frame, 'cargar_personal'):
+            frame.cargar_personal()
 
     def Minutas(self):
         self.show_frames(Minutas)
@@ -79,7 +83,6 @@ class Container(tk.Frame):
 
     def extra(self):
         self.show_frames(Extra)
-
 
 '''    def widgets(self):
         navbar = Frame(self, bg="#ddd")

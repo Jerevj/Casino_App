@@ -3,6 +3,8 @@ from tkinter import *
 from tkinter import ttk, messagebox
 import tkinter as tk
 from conexion import Conexion  # Importar la clase Conexion
+from utils.excel_utils import excel_manager  # Importar el gestor de Excel
+from openpyxl import load_workbook
 
 class Personal(tk.Frame):
     def __init__(self, padre):
@@ -50,6 +52,11 @@ class Personal(tk.Frame):
         # Botón para desactivar empleados
         tk.Button(self.botones_frame, text="❌ Desactivar Empleado", command=self.desactivar_empleado, fg="red", width=20, height=2).grid(row=2, column=0, pady=5)
 
+        # Opción para visualizar activos o inactivos
+        self.estado_var = tk.StringVar(value="activos")
+        tk.Radiobutton(self.botones_frame, text="Activos", variable=self.estado_var, value="activos", command=self.cargar_personal).grid(row=3, column=0, pady=5)
+        tk.Radiobutton(self.botones_frame, text="Inactivos", variable=self.estado_var, value="inactivos", command=self.cargar_personal).grid(row=4, column=0, pady=5)
+
         # Hacer el diseño responsivo
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
@@ -63,35 +70,13 @@ class Personal(tk.Frame):
         for widget in self.treeview.get_children():
             self.treeview.delete(widget)
 
-        query = "SELECT rut, nombre, clave, estado FROM personas"
-        self.db.cursor.execute(query)
+        estado = 1 if self.estado_var.get() == "activos" else 0
+        query = "SELECT rut, nombre, clave, estado FROM personas WHERE estado = %s"
+        self.db.cursor.execute(query, (estado,))
         personas = self.db.cursor.fetchall()
 
         for persona in personas:
             self.treeview.insert("", "end", values=persona)
-
-    '''    def verificar_rut(self, rut):
-        """Verifica que el RUT sea válido."""
-        rut = rut.replace(".", "").replace("-", "")
-        cuerpo = rut[:-1]
-        verificador = rut[-1].upper()
-
-        suma = 0
-        factor = 2
-
-        for digit in reversed(cuerpo):
-            suma += int(digit) * factor
-            factor = 9 if factor == 7 else factor + 1
-
-        mod = 11 - (suma % 11)
-        if mod == 11:
-            mod = "0"
-        elif mod == 10:
-            mod = "K"
-        else:
-            mod = str(mod)
-
-        return mod == verificador'''
 
     def editar_celda(self, event):
         """Permite editar una celda al hacer doble clic."""
@@ -162,6 +147,9 @@ class Personal(tk.Frame):
             self.db.cursor.execute(query, (nuevo_valor, rut))
             self.db.conexion.commit()
 
+            # Sincronizar cambios con el Excel
+            self.sincronizar_persona_con_excel(rut, valores[1])  # Pasar el RUT y el nombre
+
             entry.destroy()
 
         entry.bind("<Return>", guardar_cambio)
@@ -201,7 +189,7 @@ class Personal(tk.Frame):
                 messagebox.showwarning("Error", "El RUT debe tener el formato correcto (ej. 12345678-9).")
                 return
 
-            # Validar que la clave tenga 4 dígitos
+# Validar que la clave tenga 4 dígitos
             if len(clave) != 4 or not clave.isdigit():
                 messagebox.showwarning("Error", "La clave debe ser de 4 dígitos numéricos.")
                 return
@@ -230,6 +218,7 @@ class Personal(tk.Frame):
             try:
                 self.db.cursor.execute(query, (rut, nombre_formateado, clave, 1))
                 self.db.conexion.commit()
+                self.sincronizar_persona_con_excel(rut, nombre_formateado)  # Sincronizar con Excel
                 self.cargar_personal()
                 messagebox.showinfo("Éxito", "Empleado agregado correctamente.")
                 formulario.destroy()  # Cerrar el formulario
@@ -238,6 +227,29 @@ class Personal(tk.Frame):
 
         # Botón para agregar empleado
         tk.Button(formulario, text="Agregar", command=agregar_empleado, width=20).grid(row=3, column=0, columnspan=2, pady=10)
+
+    def sincronizar_persona_con_excel(self, rut, nombre):
+        try:
+            minuta_path = excel_manager.obtener_ruta_minuta()
+            wb = load_workbook(minuta_path)
+            sheet = wb.active
+
+            # Verificar si el RUT ya está en el Excel
+            ruts_excel = {sheet.cell(row=i, column=1).value for i in range(2, sheet.max_row + 1)}
+            if rut not in ruts_excel:
+                fila_actual = sheet.max_row + 1
+                sheet.cell(row=fila_actual, column=1, value=rut)  # Columna 0 (RUT)
+                sheet.cell(row=fila_actual, column=33, value=nombre)  # Columna 32 (Nombre Funcionario)
+            else:
+                # Si el RUT ya existe, actualizar el nombre
+                for row in range(2, sheet.max_row + 1):
+                    if sheet.cell(row=row, column=1).value == rut:
+                        sheet.cell(row=row, column=33, value=nombre)  # Actualizar el nombre
+
+            wb.save(minuta_path)
+            wb.close()  # Cerrar el archivo después de guardar
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al sincronizar persona con el Excel: {e}")
 
     def desactivar_empleado(self):
         """Cambia el estado de un empleado a 'Inactivo'."""

@@ -12,14 +12,13 @@ class Minutas(tk.Frame):
         self.db = Conexion()
         self.db.conectar()
         self.widgets()
-        #self.sincronizar_empleados_con_excel()
         self.cargar_minutas()
 
     def widgets(self):
         titulo = tk.Label(self, text="Gestión de Menús seleccionados", font=("Arial", 20, "bold"))
         titulo.pack(pady=10)
         
-        self.btn_actualizar = tk.Button(self, text="Actualizar", command=self.sincronizar_empleados_con_excel)
+        self.btn_actualizar = tk.Button(self, text="Actualizar", command=self.actualizar_datos)
         self.btn_actualizar.pack(pady=5)
         
         self.main_frame = tk.Frame(self)
@@ -34,8 +33,13 @@ class Minutas(tk.Frame):
         self.table_frame = tk.Frame(self.main_frame)
         self.table_frame.pack(fill=tk.BOTH, expand=True)
 
+    def actualizar_datos(self):
+        self.sincronizar_empleados_con_excel()
+        self.recargar_y_actualizar()
+
     def sincronizar_empleados_con_excel(self):
         try:
+            print("Sincronizando empleados con Excel...")  # Mensaje de depuración
             minuta_path = excel_manager.obtener_ruta_minuta()
             wb = load_workbook(minuta_path)
             sheet = wb.active
@@ -43,8 +47,8 @@ class Minutas(tk.Frame):
             # Obtener lista de RUTs en Excel
             ruts_excel = {sheet.cell(row=i, column=1).value for i in range(2, sheet.max_row + 1)}
             
-            # Obtener lista de empleados desde la BD
-            self.db.cursor.execute("SELECT rut, nombre FROM personas")
+            # Obtener lista de empleados activos desde la BD
+            self.db.cursor.execute("SELECT rut, nombre FROM personas WHERE estado = 1")
             empleados = self.db.cursor.fetchall()
             
             fila_actual = sheet.max_row + 1
@@ -55,14 +59,15 @@ class Minutas(tk.Frame):
                     fila_actual += 1
             
             wb.save(minuta_path)
+            wb.close()  # Cerrar el archivo después de guardar
         
             messagebox.showinfo("Éxito", "Los empleados fueron sincronizados con el Excel.")
-            self.cargar_minutas()
         except Exception as e:
             messagebox.showerror("Error", f"Error al sincronizar empleados con el Excel: {e}")
 
     def cargar_minutas(self):
         try:
+            print("Cargando minutas...")  # Mensaje de depuración
             sheet = excel_manager.obtener_minuta_sheet()
             if not sheet:
                 raise Exception("No se pudo obtener la hoja de minutas.")
@@ -89,7 +94,14 @@ class Minutas(tk.Frame):
                 self.tree.column(col, anchor="center", width=130)
                 
             for row in rows[1:]:
-                self.tree.insert('', 'end', values=row)
+                rut = row[0]
+                # Verificar si el RUT está activo en la base de datos
+                self.db.cursor.execute("SELECT estado FROM personas WHERE rut = %s", (rut,))
+                estado = self.db.cursor.fetchone()
+                if estado and estado[0] == 1:  # Solo mostrar si el estado es activo (1)
+                    self.tree.insert('', 'end', values=row)
+                else:
+                    print(f"Empleado inactivo: {rut}")  # Mensaje de depuración
             
             self.tree.bind("<Double-1>", self.editar_celda)
 
@@ -124,9 +136,11 @@ class Minutas(tk.Frame):
         self.tree.item(item, values=valores)
         
         self.actualizar_excel()
+        self.recargar_y_actualizar()  # Recargar y actualizar después de actualizar el Excel
     
     def actualizar_excel(self):
         try:
+            print("Actualizando Excel...")  # Mensaje de depuración
             minuta_path = excel_manager.obtener_ruta_minuta()
             wb = load_workbook(minuta_path)
             sheet = wb.active
@@ -135,6 +149,13 @@ class Minutas(tk.Frame):
                 for j, valor in enumerate(valores):
                     sheet.cell(row=i, column=j+1, value=valor)
             wb.save(minuta_path)
+            wb.close()  # Cerrar el archivo después de guardar
             messagebox.showinfo("Éxito", "Datos actualizados en Excel.")
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo actualizar el Excel: {e}")
+
+    def recargar_y_actualizar(self):
+        """Recarga el archivo Excel y actualiza el Treeview."""
+        print("Recargando archivos Excel...")  # Mensaje de depuración
+        excel_manager.recargar_archivos()  # Recargar los archivos Excel
+        self.cargar_minutas()  # Actualizar el Treeview
