@@ -1,3 +1,4 @@
+import random
 import re
 from tkinter import *
 from tkinter import ttk, messagebox
@@ -56,6 +57,9 @@ class Personal(tk.Frame):
         self.estado_var = tk.StringVar(value="activos")
         tk.Radiobutton(self.botones_frame, text="Activos", variable=self.estado_var, value="activos", command=self.cargar_personal).grid(row=3, column=0, pady=5)
         tk.Radiobutton(self.botones_frame, text="Inactivos", variable=self.estado_var, value="inactivos", command=self.cargar_personal).grid(row=4, column=0, pady=5)
+
+        # Botón para generar clave única
+        tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=5, column=0, pady=5)
 
         # Hacer el diseño responsivo
         self.grid_rowconfigure(1, weight=1)
@@ -189,7 +193,7 @@ class Personal(tk.Frame):
                 messagebox.showwarning("Error", "El RUT debe tener el formato correcto (ej. 12345678-9).")
                 return
 
-# Validar que la clave tenga 4 dígitos
+            # Validar que la clave tenga 4 dígitos
             if len(clave) != 4 or not clave.isdigit():
                 messagebox.showwarning("Error", "La clave debe ser de 4 dígitos numéricos.")
                 return
@@ -264,6 +268,18 @@ class Personal(tk.Frame):
         self.db.conexion.commit()
         self.cargar_personal()
         messagebox.showinfo("Éxito", "Empleado desactivado correctamente.")
+
+    def generar_clave_unica(self):
+        """Genera una clave única de 4 dígitos que no esté repetida en la base de datos y la copia al portapapeles."""
+        while True:
+            clave = f"{random.randint(0, 9999):04d}"
+            query = "SELECT * FROM personas WHERE clave = %s"
+            self.db.cursor.execute(query, (clave,))
+            if not self.db.cursor.fetchone():
+                self.clipboard_clear()
+                self.clipboard_append(clave)
+                messagebox.showinfo("Clave Generada", f"La clave generada es: {clave}\nLa clave ha sido copiada al portapapeles.")
+                break
 
     def on_closing(self):
         """Cierra la conexión cuando la ventana se cierra."""
