@@ -232,43 +232,50 @@ class Personal(tk.Frame):
         # Botón para agregar empleado
         tk.Button(formulario, text="Agregar", command=agregar_empleado, width=20).grid(row=3, column=0, columnspan=2, pady=10)
 
-    def sincronizar_persona_con_excel(self, rut, nombre):
+    def sincronizar_persona_con_excel(self, rut, nombre, desactivar=False):
         try:
             minuta_path = excel_manager.obtener_ruta_minuta()
             wb = load_workbook(minuta_path)
             sheet = wb.active
 
             # Verificar si el RUT ya está en el Excel
-            ruts_excel = {sheet.cell(row=i, column=1).value for i in range(2, sheet.max_row + 1)}
-            if rut not in ruts_excel:
-                fila_actual = sheet.max_row + 1
-                sheet.cell(row=fila_actual, column=1, value=rut)  # Columna 0 (RUT)
-                sheet.cell(row=fila_actual, column=33, value=nombre)  # Columna 32 (Nombre Funcionario)
-            else:
-                # Si el RUT ya existe, actualizar el nombre
-                for row in range(2, sheet.max_row + 1):
-                    if sheet.cell(row=row, column=1).value == rut:
+            for row in range(2, sheet.max_row + 1):
+                if sheet.cell(row=row, column=1).value == rut:
+                    if desactivar:
+                        sheet.cell(row=row, column=34, value=0)  # Columna 33 (Estado) a 0 (Inactivo)
+                        print(f"Empleado {rut} desactivado en el Excel.")  # Mensaje de depuración
+                    else:
                         sheet.cell(row=row, column=33, value=nombre)  # Actualizar el nombre
+                    break
+            else:
+                if not desactivar:
+                    fila_actual = sheet.max_row + 1
+                    sheet.cell(row=fila_actual, column=1, value=rut)  # Columna 0 (RUT)
+                    sheet.cell(row=fila_actual, column=33, value=nombre)  # Columna 32 (Nombre Funcionario)
 
             wb.save(minuta_path)
             wb.close()  # Cerrar el archivo después de guardar
         except Exception as e:
             messagebox.showerror("Error", f"Error al sincronizar persona con el Excel: {e}")
-
+                
+        
     def desactivar_empleado(self):
         """Cambia el estado de un empleado a 'Inactivo'."""
-        item = self.treeview.selection()
-        if not item:
+        try:
+            item = self.treeview.selection()[0]
+            rut = self.treeview.item(item, "values")[0]
+            query = "UPDATE personas SET estado = 0 WHERE rut = %s"
+            self.db.cursor.execute(query, (rut,))
+            self.db.conexion.commit()
+            print(f"Empleado {rut} desactivado en la base de datos.")  # Mensaje de depuración
+            self.sincronizar_persona_con_excel(rut, None, desactivar=True)  # Sincronizar con Excel
+            self.cargar_personal()
+            messagebox.showinfo("Éxito", "Empleado desactivado correctamente.")
+        except IndexError:
             messagebox.showwarning("Atención", "Seleccione un empleado para desactivar.")
-            return
-
-        rut = self.treeview.item(item[0], "values")[0]
-        query = "UPDATE personas SET estado = 0 WHERE rut = %s"
-        self.db.cursor.execute(query, (rut,))
-        self.db.conexion.commit()
-        self.cargar_personal()
-        messagebox.showinfo("Éxito", "Empleado desactivado correctamente.")
-
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al desactivar el empleado: {e}")
+                
     def generar_clave_unica(self):
         """Genera una clave única de 4 dígitos que no esté repetida en la base de datos y la copia al portapapeles."""
         while True:

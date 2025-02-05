@@ -62,7 +62,7 @@ class VistaUsuario(tk.Frame):
         tk.Label(self, text="Ingrese su clave:", font=fuente_grande).grid(row=0, column=0, padx=10, pady=10)
 
         # Campo de entrada
-        self.entry_clave = tk.Entry(self, font=fuente_grande, width=15)
+        self.entry_clave = tk.Entry(self, font=fuente_grande, width=15, show='*')
         self.entry_clave.grid(row=0, column=1, padx=10, pady=10)
         self.entry_clave.bind("<FocusIn>", lambda event: set_campo_activo(self.entry_clave))
         self.entry_clave.focus_set()  

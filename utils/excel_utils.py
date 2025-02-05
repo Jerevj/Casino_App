@@ -1,3 +1,4 @@
+# Clase ExcelManager
 import os
 from openpyxl import load_workbook
 from tkinter import messagebox
@@ -28,20 +29,18 @@ class ExcelManager:
         except Exception as e:
             print(f"Error al cargar 'Minuta_Actual.xlsx': {e}")
             messagebox.showerror("Error", "No se pudo cargar el archivo 'Minuta_Actual.xlsx'.")
-            self.minuta_wb = None
-        
+            self.minuta_w
         try:
             self.menus_wb = load_workbook(self.menus_file_path)
-            self.menus_ws = self.menus_wb.active  # Asumimos que los menús están en la primera hoja
+            self.menus_ws = self.menus_wb.active  # Cargar la hoja de 'Menus_Actual.xlsx'
         except Exception as e:
             print(f"Error al cargar 'Menus_Actual.xlsx': {e}")
             messagebox.showerror("Error", "No se pudo cargar el archivo 'Menus_Actual.xlsx'.")
-            self.menus_wb = None
+            self.menus_ws = None  # Asegurar que no haya una referencia incorrecta
 
     def recargar_archivos(self):
         """Recarga los archivos de Excel para reflejar los cambios."""
         self.cargar_archivos()
-
     def obtener_menu_desde_excel(self, rut, dia):
         """Obtiene la opción de menú (A, B, C) de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
         if self.minuta_ws is None:

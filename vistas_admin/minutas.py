@@ -12,7 +12,7 @@ class Minutas(tk.Frame):
         self.db = Conexion()
         self.db.conectar()
         self.widgets()
-        self.cargar_minutas()
+        # Eliminar la llamada a cargar_minutas desde aquí
 
     def widgets(self):
         titulo = tk.Label(self, text="Gestión de Menús seleccionados", font=("Arial", 20, "bold"))
@@ -57,14 +57,19 @@ class Minutas(tk.Frame):
                     sheet.cell(row=fila_actual, column=1, value=rut)  # Columna 0 (RUT)
                     sheet.cell(row=fila_actual, column=33, value=nombre)  # Columna 32 (Nombre Funcionario)
                     fila_actual += 1
-            
+                else:
+                    # Actualizar el nombre si el RUT ya existe
+                    for row in range(2, sheet.max_row + 1):
+                        if sheet.cell(row=row, column=1).value == rut:
+                            sheet.cell(row=row, column=33, value=nombre)  # Actualizar el nombre
+
             wb.save(minuta_path)
             wb.close()  # Cerrar el archivo después de guardar
         
             messagebox.showinfo("Éxito", "Los empleados fueron sincronizados con el Excel.")
         except Exception as e:
             messagebox.showerror("Error", f"Error al sincronizar empleados con el Excel: {e}")
-
+        
     def cargar_minutas(self):
         try:
             print("Cargando minutas...")  # Mensaje de depuración
@@ -92,9 +97,13 @@ class Minutas(tk.Frame):
             for col in self.column_names:
                 self.tree.heading(col, text=col)
                 self.tree.column(col, anchor="center", width=130)
-                
+            
+            ruts_vistos = set()
             for row in rows[1:]:
                 rut = row[0]
+                if rut in ruts_vistos:
+                    continue  # Saltar filas duplicadas
+                ruts_vistos.add(rut)
                 # Verificar si el RUT está activo en la base de datos
                 self.db.cursor.execute("SELECT estado FROM personas WHERE rut = %s", (rut,))
                 estado = self.db.cursor.fetchone()
@@ -106,8 +115,8 @@ class Minutas(tk.Frame):
             self.tree.bind("<Double-1>", self.editar_celda)
 
         except Exception as e:
-            messagebox.showerror("Error", f"Error al cargar las minutas desde el archivo: {e}")
-
+            messagebox.showerror("Error", f"Error al cargar las minutas desde el archivo: {e}")       
+        
     def editar_celda(self, event):
         item = self.tree.identify_row(event.y)
         column = self.tree.identify_column(event.x)

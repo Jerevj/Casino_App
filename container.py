@@ -61,10 +61,10 @@ class Container(tk.Frame):
         frame = self.frames[container]
         frame.tkraise()
         # Asegurarse de recargar los datos cuando se muestra el frame
-        if hasattr(frame, 'cargar_minutas'):
+        '''if hasattr(frame, 'cargar_minutas'):
             frame.cargar_minutas()
         elif hasattr(frame, 'cargar_personal'):
-            frame.cargar_personal()
+            frame.cargar_personal()'''
 
     def Minutas(self):
         self.show_frames(Minutas)
