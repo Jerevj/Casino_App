@@ -19,9 +19,6 @@ class Extra(tk.Frame):
         btn_mostrar_excel = tk.Button(self, text="Mostrar Menú Actual", command=self.mostrar_menus, font=("Arial", 12))
         btn_mostrar_excel.pack(pady=10)
 
-        # Botón para volver a la vista anterior (extras)
-        btn_volver = tk.Button(self, text="Volver a Extras", command=self.volver, font=("Arial", 12))
-        btn_volver.pack(pady=10)
 
     def mostrar_menus(self):
         # Verificar si la ventana de menús ya está abierta
@@ -89,8 +86,3 @@ class Extra(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo mostrar el menú: {e}")
-
-    def volver(self):
-        # Volver a la ventana principal de extras
-        self.pack_forget()
-        self.padre.show_extras()  # Asumiendo que el padre tiene un método `show_extras` que muestra la vista principal
