@@ -2,15 +2,19 @@ import tkinter as tk
 from tkinter import Canvas
 from tkinter.font import Font
 from random import randint
+import win32print
+import win32ui
+from PIL import ImageWin
 
 def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
-    """Crear la ventana de la boleta de almuerzo con el formato proporcionado."""
+    """Crear la ventana de la boleta de almuerzo con el formato proporcionado y la opción de imprimirla."""
     if " " in nombre:  # Reordena si hay más de una palabra
         nombre_parts = nombre.split()
         nombre = f"{nombre_parts[2]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
     else:
         nombre = nombre  # Deja el nombre tal cual si tiene una sola palabra
 
+    # Crear la interfaz gráfica de la boleta (pantalla)
     root = tk.Tk()
     root.title("Boleta de Almuerzo")
     root.geometry("300x500")
@@ -43,4 +47,32 @@ def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
     for i in range(20, 280, 10):
         altura = randint(20, 40)
         canvas.create_line(i, barcode_y, i, barcode_y + altura, width=2)
+
+    # Función para imprimir la boleta
+    def imprimir_boleta():
+        printer_name = win32print.GetDefaultPrinter()  # Obtener impresora predeterminada
+        hprinter = win32print.OpenPrinter(printer_name)  # Abrir la impresora
+        printer_info = win32print.GetPrinter(hprinter, 2)  # Obtener información de la impresora
+
+        # Crear el contexto de la impresora
+        hdc = win32ui.CreateDC()
+        hdc.CreatePrinterDC(printer_name)
+        hdc.StartDoc("Boleta de Almuerzo")
+        hdc.StartPage()
+
+        # Dibujar el texto en la impresora
+        hdc.TextOut(100, 100, f"MENU: {menu}")
+        hdc.TextOut(100, 150, f"Fecha: {fecha}")
+        hdc.TextOut(100, 200, f"Nombre: {nombre}")
+        hdc.TextOut(100, 250, f"RUT: {rut}")
+        hdc.TextOut(100, 300, f"ID BOLETA: {id_boleta}")
+        hdc.TextOut(100, 350, f"Descripción: {menu_descripcion}")
+
+        hdc.EndPage()
+        hdc.EndDoc()
+        hdc.DeleteDC()
+
+    # Llamar a imprimir cuando el usuario quiera
+    ##imprimir_boleta()
+
     root.mainloop()

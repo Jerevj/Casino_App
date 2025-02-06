@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from administracion import Administracion
+#from administracion import Administracion
+from login import Login
 from vista_usuario import VistaUsuario
 
 class Inicio(tk.Tk):
@@ -38,7 +39,6 @@ class Inicio(tk.Tk):
         nueva_ventana.mainloop()"""
 
     def modo_administrador(self):
-        """Lógica para abrir el modo administrador."""
-        self.destroy()  # Cerramos la ventana actual
-        app = Administracion()
-        app.mainloop()
+        """Abrir la ventana de login antes de ir a Administración."""
+        login_window = Login(self)
+        login_window.grab_set()  # Bloquea la ventana principal hasta cerrar el login

@@ -1,7 +1,7 @@
 from tkinter import *
 from tkinter import ttk
-from login import Login
-from login import Registro
+#from login import Login
+#from login import Registro
 from container import Container
 import sys
 import os

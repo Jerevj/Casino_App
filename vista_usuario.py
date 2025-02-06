@@ -1,6 +1,9 @@
 #vista_usuario.py
 import tkinter as tk
 import pandas as pd
+import win32print
+import win32ui
+from PIL import ImageWin
 from utils.excel_utils import excel_manager  # Importamos la instancia de ExcelManager
 from tkinter import messagebox
 from datetime import datetime
@@ -122,7 +125,7 @@ class VistaUsuario(tk.Frame):
                         # Generar boleta
                         id_boleta = f"{fecha_actual.strftime('%Y%m%d')}{clave}"
                         crear_boleta(opcion_menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
-                        print("Boleta generada.")
+                        print("Boleta generada e impresa")
                     else:
                         messagebox.showerror("Error", "No se encontró el nombre del menú.")
                 else:
