@@ -58,5 +58,23 @@ class Conexion:
         print(f"Resultado de la consulta: {resultado}")  # Verifica el resultado
         return resultado
 
+'''    def registrar_boleta(self, rut, fecha, opcion_menu, nombre_menu):
+        """Registra la boleta en la base de datos."""
+        try:
+            with self.conexion.cursor() as cursor:
+                query = """
+                    INSERT INTO menus_registrados (rut, fecha, menu, nombre_menu, registrado, estado_dia)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """
+                valores = (rut, fecha, opcion_menu, nombre_menu, 1, "normal")
+                cursor.execute(query, valores)
+                self.conexion.commit()  # Cambié self.conn.commit() por self.conexion.commit()
+                print(f"Boleta registrada para RUT {rut} en {fecha}")
+        except Exception as e:
+            print(f"Error al registrar boleta: {e}")
+            self.conexion.rollback()  # Revertir cambios si ocurre un error
+
+
+'''
 # Instancia global de la clase (si es necesario)
 # db = Conexion()
