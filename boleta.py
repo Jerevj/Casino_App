@@ -10,7 +10,7 @@ def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
     """Crear la ventana de la boleta de almuerzo con el formato proporcionado y la opción de imprimirla."""
     if " " in nombre:  # Reordena si hay más de una palabra
         nombre_parts = nombre.split()
-        nombre = f"{nombre_parts[2]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
+        nombre = f"{nombre_parts[1]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
     else:
         nombre = nombre  # Deja el nombre tal cual si tiene una sola palabra
 
@@ -50,29 +50,32 @@ def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
 
     # Función para imprimir la boleta
     def imprimir_boleta():
-        printer_name = win32print.GetDefaultPrinter()  # Obtener impresora predeterminada
-        hprinter = win32print.OpenPrinter(printer_name)  # Abrir la impresora
-        printer_info = win32print.GetPrinter(hprinter, 2)  # Obtener información de la impresora
+        try:
+            printer_name = win32print.GetDefaultPrinter()  # Obtener impresora predeterminada
+            hprinter = win32print.OpenPrinter(printer_name)  # Abrir la impresora
+            printer_info = win32print.GetPrinter(hprinter, 2)  # Obtener información de la impresora
 
-        # Crear el contexto de la impresora
-        hdc = win32ui.CreateDC()
-        hdc.CreatePrinterDC(printer_name)
-        hdc.StartDoc("Boleta de Almuerzo")
-        hdc.StartPage()
+            # Crear el contexto de la impresora
+            hdc = win32ui.CreateDC()
+            hdc.CreatePrinterDC(printer_name)
+            hdc.StartDoc("Boleta de Almuerzo")
+            hdc.StartPage()
 
-        # Dibujar el texto en la impresora
-        hdc.TextOut(100, 100, f"MENU: {menu}")
-        hdc.TextOut(100, 150, f"Fecha: {fecha}")
-        hdc.TextOut(100, 200, f"Nombre: {nombre}")
-        hdc.TextOut(100, 250, f"RUT: {rut}")
-        hdc.TextOut(100, 300, f"ID BOLETA: {id_boleta}")
-        hdc.TextOut(100, 350, f"Descripción: {menu_descripcion}")
+            # Dibujar el texto en la impresora
+            hdc.TextOut(100, 100, f"MENU: {menu}")
+            hdc.TextOut(100, 150, f"Fecha: {fecha}")
+            hdc.TextOut(100, 200, f"Nombre: {nombre}")
+            hdc.TextOut(100, 250, f"RUT: {rut}")
+            hdc.TextOut(100, 300, f"ID BOLETA: {id_boleta}")
+            hdc.TextOut(100, 350, f"Descripción: {menu_descripcion}")
 
-        hdc.EndPage()
-        hdc.EndDoc()
-        hdc.DeleteDC()
+            hdc.EndPage()
+            hdc.EndDoc()
+            hdc.DeleteDC()
+        except Exception as e:
+            print(f"Error al imprimir la boleta: {e}")
 
-    # Llamar a imprimir cuando el usuario quiera
-    ##imprimir_boleta()
+    # Botón para imprimir la boleta
+    tk.Button(root, text="Imprimir Boleta", command=imprimir_boleta).pack(pady=20)
 
     root.mainloop()

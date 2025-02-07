@@ -53,13 +53,16 @@ class Personal(tk.Frame):
         # Botón para desactivar empleados
         tk.Button(self.botones_frame, text="❌ Desactivar Empleado", command=self.desactivar_empleado, fg="red", width=20, height=2).grid(row=2, column=0, pady=5)
 
+        # Botón para ACTIVAR empleados
+        tk.Button(self.botones_frame, text="✔️ Activar Empleado", command=self.activar_empleado, fg="blue", width=20, height=2).grid(row=3, column=0, pady=5)
+        
         # Opción para visualizar activos o inactivos
         self.estado_var = tk.StringVar(value="activos")
-        tk.Radiobutton(self.botones_frame, text="Activos", variable=self.estado_var, value="activos", command=self.cargar_personal).grid(row=3, column=0, pady=5)
-        tk.Radiobutton(self.botones_frame, text="Inactivos", variable=self.estado_var, value="inactivos", command=self.cargar_personal).grid(row=4, column=0, pady=5)
+        tk.Radiobutton(self.botones_frame, text="Activos", variable=self.estado_var, value="activos", command=self.cargar_personal).grid(row=4, column=0, pady=5)
+        tk.Radiobutton(self.botones_frame, text="Inactivos", variable=self.estado_var, value="inactivos", command=self.cargar_personal).grid(row=5, column=0, pady=5)
 
         # Botón para generar clave única
-        tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=5, column=0, pady=5)
+        tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=6, column=0, pady=5)
 
         # Hacer el diseño responsivo
         self.grid_rowconfigure(1, weight=1)
@@ -275,7 +278,24 @@ class Personal(tk.Frame):
             messagebox.showwarning("Atención", "Seleccione un empleado para desactivar.")
         except Exception as e:
             messagebox.showerror("Error", f"Error al desactivar el empleado: {e}")
-                
+    
+    def activar_empleado(self):
+        """Cambia el estado de un empleado a 'Activo'."""
+        try:
+            item = self.treeview.selection()[0]
+            rut = self.treeview.item(item, "values")[0]
+            query = "UPDATE personas SET estado = 1 WHERE rut = %s"
+            self.db.cursor.execute(query, (rut,))
+            self.db.conexion.commit()
+            print(f"Empleado {rut} Activado en la base de datos.")  # Mensaje de depuración
+            self.sincronizar_persona_con_excel(rut, None, desactivar=False)  # Sincronizar con Excel
+            self.cargar_personal()
+            messagebox.showinfo("Éxito", "Empleado activado correctamente.")
+        except IndexError:
+            messagebox.showwarning("Atención", "Seleccione un empleado para activar.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al activar el empleado: {e}")
+               
     def generar_clave_unica(self):
         """Genera una clave única de 4 dígitos que no esté repetida en la base de datos y la copia al portapapeles."""
         while True:
