@@ -2,19 +2,20 @@
 import os
 from openpyxl import load_workbook
 from tkinter import messagebox
+from config import MINUTA_FILE_PATH, MENUS_FILE_PATH
 
 class ExcelManager:
-    def __init__(self, minuta_file_path, menus_file_path):
-        if not os.path.exists(minuta_file_path):
-            messagebox.showerror("Error", f"No se encontró el archivo: {minuta_file_path}")
+    def __init__(self):
+        if not os.path.exists(MINUTA_FILE_PATH):
+            messagebox.showerror("Error", f"No se encontró el archivo: {MINUTA_FILE_PATH}")
             return
-        
-        if not os.path.exists(menus_file_path):
-            messagebox.showerror("Error", f"No se encontró el archivo: {menus_file_path}")
+
+        if not os.path.exists(MENUS_FILE_PATH):
+            messagebox.showerror("Error", f"No se encontró el archivo: {MENUS_FILE_PATH}")
             return
-        
-        self.minuta_file_path = minuta_file_path
-        self.menus_file_path = menus_file_path
+
+        self.minuta_file_path = MINUTA_FILE_PATH
+        self.menus_file_path = MENUS_FILE_PATH
         self.minuta_wb = None
         self.menus_wb = None
         self.minuta_ws = None
@@ -123,7 +124,4 @@ class ExcelManager:
         return self.menus_file_path
 
 # Crear la instancia global de ExcelManager
-excel_manager = ExcelManager(
-    "C:/Users/practicainformatica/Desktop/CarpetaExcel/Minuta_Actual.xlsx", 
-    "C:/Users/practicainformatica/Desktop/CarpetaExcel/Menus_Actual.xlsx"
-)
+excel_manager = ExcelManager()

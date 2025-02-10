@@ -4,15 +4,16 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from datetime import datetime
 from utils.excel_utils import ExcelManager
+from config import MINUTA_FILE_PATH, MENUS_FILE_PATH, BACKUP_FOLDER
 
 class Subir(tk.Frame):
     def __init__(self, padre):
         super().__init__(padre)
         self.minuta_file_path = None
         self.menus_file_path = None
-        self.current_minuta_file = "C:/Users/practicainformatica/Desktop/CarpetaExcel/Minuta_Actual.xlsx"
-        self.current_menus_file = "C:/Users/practicainformatica/Desktop/CarpetaExcel/Menus_Actual.xlsx"
-        self.backup_folder = "C:/Users/practicainformatica/Desktop/CarpetaExcel/archivos_anteriores"
+        self.current_minuta_file = MINUTA_FILE_PATH
+        self.current_menus_file = MENUS_FILE_PATH
+        self.backup_folder = BACKUP_FOLDER
         self.widgets()
 
     def widgets(self):
@@ -36,9 +37,16 @@ class Subir(tk.Frame):
         boton_subir_menus = tk.Button(self, text="⬆ Subir Menús", command=self.cargar_menus, font=("Arial", 12), bg="#4CAF50", fg="white")
         boton_subir_menus.grid(row=2, column=1, padx=20, pady=10, sticky="w")
 
+        # Botones para guardar respaldo
+        boton_guardar_respaldo_minuta = tk.Button(self, text="💾 Guardar Respaldo Minuta", command=self.guardar_respaldo_minuta, font=("Arial", 12), bg="#2196F3", fg="white")
+        boton_guardar_respaldo_minuta.grid(row=3, column=0, pady=10, sticky="e")
+
+        boton_guardar_respaldo_menus = tk.Button(self, text="💾 Guardar Respaldo Menús", command=self.guardar_respaldo_menus, font=("Arial", 12), bg="#2196F3", fg="white")
+        boton_guardar_respaldo_menus.grid(row=3, column=1, pady=10, sticky="w")
+
         # Etiqueta para mostrar el estado de los archivos
         self.label_archivos = tk.Label(self, text="No se han seleccionado archivos.", font=("Arial", 12), fg="gray")
-        self.label_archivos.grid(row=3, column=0, columnspan=2, pady=15)
+        self.label_archivos.grid(row=4, column=0, columnspan=2, pady=15)
 
     def seleccionar_archivo_minuta(self):
         file_path = filedialog.askopenfilename(title="Seleccionar archivo Minuta", filetypes=[("Archivos de Excel", "*.xlsx *.xls")])
@@ -79,15 +87,27 @@ class Subir(tk.Frame):
             shutil.copy(nuevo_archivo, archivo_actual)
             messagebox.showinfo("Éxito", f"El archivo {tipo} se ha cargado correctamente.")
             
-            if tipo == "minuta":
-                excel_manager = ExcelManager(archivo_actual, self.current_menus_file)
-            else:
-                excel_manager = ExcelManager(self.current_minuta_file, archivo_actual)
-            
+            excel_manager = ExcelManager()
             excel_manager.cargar_archivos()
             self.label_archivos.config(text=f"Archivo {tipo} cargado con éxito.", fg="green")
         except Exception as e:
             messagebox.showerror("Error", f"Hubo un problema al cargar el archivo {tipo}:\n{e}")
+
+    def guardar_respaldo_minuta(self):
+        self.guardar_respaldo(self.current_minuta_file, "Minuta")
+
+    def guardar_respaldo_menus(self):
+        self.guardar_respaldo(self.current_menus_file, "Menús")
+
+    def guardar_respaldo(self, archivo_actual, tipo):
+        file_path = filedialog.asksaveasfilename(title=f"Guardar Respaldo {tipo}", defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx *.xls")])
+        if file_path:
+            try:
+                os.makedirs(self.backup_folder, exist_ok=True)
+                shutil.copy(archivo_actual, file_path)
+                messagebox.showinfo("Éxito", f"El respaldo de {tipo} se ha guardado correctamente.")
+            except Exception as e:
+                messagebox.showerror("Error", f"Hubo un problema al guardar el respaldo de {tipo}:\n{e}")
 
     def obtener_mes_actual(self):
         now = datetime.now()

@@ -42,6 +42,10 @@ class Menus_inscritos(tk.Frame):
         frame_tree.grid_rowconfigure(0, weight=1)
         frame_tree.grid_columnconfigure(0, weight=1)
 
+        # Configurar el Frame principal para expandirse
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
         # Obtener los datos de la base de datos
         self.cargar_datos()
 

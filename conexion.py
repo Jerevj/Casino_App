@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import pooling, Error
-
+from config import DB_HOST,DB_NAME,DB_PASSWORD,DB_USER,PORT
 class Conexion:
     def __init__(self, usar_pool=True):
         self.usar_pool = usar_pool
@@ -12,10 +12,10 @@ class Conexion:
                     pool_name="mypool",
                     pool_size=10,
                     pool_reset_session=True,
-                    host='localhost',
-                    user='root',
-                    password='admin',
-                    database='casino'
+                    host= DB_HOST,
+                    user=DB_USER,
+                    password=DB_PASSWORD, 
+                    database=DB_NAME
                 )
                 print("Pool de conexiones creado exitosamente.")
             except Error as e:
@@ -28,11 +28,11 @@ class Conexion:
                 self.conexion = self.pool.get_connection()
             else:
                 self.conexion = mysql.connector.connect(
-                    host='localhost',
-                    user='root',
-                    password='admin',
-                    database='casino',
-                    port=3306
+                    host= DB_HOST,
+                    user=DB_USER,
+                    password=DB_PASSWORD, 
+                    database=DB_NAME,
+                    port=PORT
                 )
             self.cursor = self.conexion.cursor()
             print("Conexión obtenida.")
