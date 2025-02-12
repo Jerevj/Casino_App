@@ -14,15 +14,15 @@ class Extra(tk.Frame):
     def widgets(self):
         # Título de la ventana
         mensaje = tk.Label(self, text="¡Ventana Extra cargada correctamente!", font=("Arial", 16))
-        mensaje.pack(pady=20)
+        mensaje.grid(row=0, column=0, pady=20)
 
         # Botón para mostrar el Excel ordenado
         btn_mostrar_excel = tk.Button(self, text="Mostrar Menú Actual", command=self.mostrar_menus, font=("Arial", 12))
-        btn_mostrar_excel.pack(pady=10)
+        btn_mostrar_excel.grid(row=1, column=0, pady=10)
 
         # Botón para agregar un nuevo usuario
         btn_agregar_usuario = tk.Button(self, text="Agregar Nuevo Usuario", command=self.agregar_usuario, font=("Arial", 12))
-        btn_agregar_usuario.pack(pady=10)
+        btn_agregar_usuario.grid(row=2, column=0, pady=10)
 
     def mostrar_menus(self):
         # Verificar si la ventana de menús ya está abierta
@@ -62,7 +62,7 @@ class Extra(tk.Frame):
 
             # Crear el Treeview para mostrar los menús
             tree = ttk.Treeview(ventana_menus, columns=("Fecha", "Menú A", "Menú B", "Menú C"), show="headings", height=15)
-            tree.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
+            tree.grid(padx=20, pady=20, fill=tk.BOTH, expand=True)
 
             # Configurar las columnas
             tree.heading("Fecha", text="Fecha (año/mes/dia)", anchor=tk.W)
@@ -86,7 +86,7 @@ class Extra(tk.Frame):
 
             # Añadir un botón para cerrar la ventana de la tabla
             btn_cerrar = tk.Button(ventana_menus, text="Cerrar", command=ventana_menus.destroy, font=("Arial", 12))
-            btn_cerrar.pack(pady=10)
+            btn_cerrar.grid(row=0, column=0, pady=10)
 
             # Guardamos la referencia de la ventana abierta
             self.menus_ventana_abierta = ventana_menus
@@ -101,18 +101,17 @@ class Extra(tk.Frame):
         ventana_usuario.geometry("400x300")
 
         # Campos de entrada para nombre de usuario y contraseña
-
-        tk.Label(ventana_usuario, text="Nombre Usuario:", font=("Arial", 12)).pack(pady=5)
+        tk.Label(ventana_usuario, text="Nombre Usuario:", font=("Arial", 12)).grid(row=0, column=0, pady=5)
         entry_usuario = tk.Entry(ventana_usuario, font=("Arial", 12))
-        entry_usuario.pack(pady=5)
+        entry_usuario.grid(row=0, column=1, pady=5)
 
-        tk.Label(ventana_usuario, text="Contraseña:", font=("Arial", 12)).pack(pady=5)
+        tk.Label(ventana_usuario, text="Contraseña:", font=("Arial", 12)).grid(row=1, column=0, pady=5)
         entry_clave = tk.Entry(ventana_usuario, font=("Arial", 12), show="*")
-        entry_clave.pack(pady=5)
+        entry_clave.grid(row=1, column=1, pady=5)
 
         # Botón para guardar el nuevo usuario
         btn_guardar = tk.Button(ventana_usuario, text="Guardar Usuario", command=lambda: self.guardar_usuario(entry_usuario, entry_clave, ventana_usuario), font=("Arial", 12))
-        btn_guardar.pack(pady=10)
+        btn_guardar.grid(row=2, column=0, columnspan=2, pady=10)
 
     def guardar_usuario(self, entry_usuario, entry_clave, ventana_usuario):
         # Obtener los valores de los campos

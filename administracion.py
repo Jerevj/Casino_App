@@ -22,16 +22,23 @@ class Administracion(Tk):
         self.frames[Container] = frame
         frame.pack(fill=BOTH, expand=True)
 
+        self.show_frame(Container)
+
+        self.style = ttk.Style()
+        self.style.theme_use("clam")
+        
         '''self.frames = {}
         for i in (Login, Registro, Container):
             frame = i(container, self)
             self.frames[i]= frame'''
 
-        self.show_frame(Container)
+        # Manejo del cierre de la ventana de administración
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        self.style = ttk.Style()
-        self.style.theme_use("clam")
-    
+    def on_close(self):
+        """Método para manejar el cierre de la ventana de administración."""
+        self.quit()  # Termina el mainloop y cierra la aplicación
+
     def show_frame(self, container):
         frame = self.frames[container]
         frame.tkraise()

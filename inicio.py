@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 from administracion import Administracion
 from vista_usuario import VistaUsuario
+from login import Login
 
 class Inicio(tk.Tk):
     def __init__(self):
@@ -26,6 +27,13 @@ class Inicio(tk.Tk):
         # Variable para controlar si la ventana de modo usuario está abierta
         self.ventana_usuario_abierta = False
 
+        # Manejo del cierre de la ventana principal
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
+
+    def on_close(self):
+        """Método para manejar el cierre de la ventana principal."""
+        self.quit()  # Termina el mainloop y cierra la aplicación
+
     def modo_usuario(self):
         """Lógica para abrir el modo usuario (panel numérico)."""
         if not self.ventana_usuario_abierta:
@@ -46,6 +54,5 @@ class Inicio(tk.Tk):
 
     def modo_administrador(self):
         """Lógica para abrir el modo administrador."""
-        self.destroy()  # Cerramos la ventana principal
-        app = Administracion()
-        app.mainloop()
+        login = Login(self)
+        login.grab_set()  # Bloquea la ventana principal hasta que se cierre la ventana de login
