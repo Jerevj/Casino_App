@@ -7,8 +7,8 @@ import sys
 import os
 
 class Administracion(Tk):
-    def __init__(self, *args, **kwagrs):
-        super().__init__(*args, **kwagrs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.title("Administracion Casino")
         self.geometry("1100x650+120+20")
         self.resizable(True, True)

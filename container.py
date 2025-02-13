@@ -3,7 +3,7 @@ import tkinter as tk
 from vistas_admin.extra import Extra
 from vistas_admin.minutas import Minutas
 from vistas_admin.personal import Personal
-from vistas_admin.menus_inscritos import Menus_inscritos
+from vistas_admin.menus_inscritos import MenusInscritos
 from vistas_admin.subir import Subir
 from vistas_admin.informes import Informes 
 import sys
@@ -42,7 +42,7 @@ class Container(tk.Frame):
 
         # Ahora configuramos el contenedor principal para que los frames (contenido) se ajusten correctamente
         self.frames = {}
-        for i in (Minutas, Personal, Menus_inscritos, Subir, Informes, Extra):
+        for i in (Minutas, Personal, MenusInscritos, Subir, Informes, Extra):
             frame = i(self)
             self.frames[i] = frame
             frame.grid(row=1, column=0, sticky="nsew")  # Contenido debajo del navbar
@@ -70,7 +70,7 @@ class Container(tk.Frame):
         self.show_frames(Minutas)
 
     def menus_inscritos(self):
-        self.show_frames(Menus_inscritos)
+        self.show_frames(MenusInscritos)
 
     def personal(self):
         self.show_frames(Personal)
@@ -91,7 +91,7 @@ class Container(tk.Frame):
         buttons = [
             ("Menus", Menus),
             ("Personal", Personal),
-            ("Menus Inscritos", Menus_inscritos),
+            ("Menus Inscritos", MenusInscritos),
             ("Subir", Subir),
             ("Informes", Informes),
             ("Extra", Extra),

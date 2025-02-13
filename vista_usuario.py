@@ -121,9 +121,9 @@ class VistaUsuario(tk.Frame):
                         if id_boleta:
                             # Generar boleta
                             crear_boleta(opcion_menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
-
+                            print("Boleta generada, llamando a mostrar_boleta_generada...")
                             # Usar `after()` para asegurarse de que el ciclo de eventos se actualice
-                            self.after(100, self.mostrar_boleta_generada)
+                            self.after(0, self.mostrar_boleta_generada) 
 
                         else:
                             messagebox.showerror("Error", "No se pudo registrar la boleta.")
@@ -144,6 +144,7 @@ class VistaUsuario(tk.Frame):
         
     def mostrar_boleta_generada(self):
         """Muestra el mensaje de éxito y habilita el botón nuevamente."""
+        self.update_idletasks()  # Forzar actualización de la UI
         messagebox.showinfo("Éxito", "Boleta generada.")
         self.boton_generar.config(state="normal")  # Habilitar el botón nuevamente
 
