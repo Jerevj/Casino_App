@@ -29,6 +29,7 @@ class Informes(tk.Frame):
 
         self.db = Conexion()
         self.db.conectar()
+        self.datos = []  # Variable de instancia para almacenar los datos
         self.widgets()
         self.cargar_datos()
 
@@ -84,12 +85,12 @@ class Informes(tk.Frame):
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        datos = self.obtener_datos(anio, mes, dia)
+        self.datos = self.obtener_datos(anio, mes, dia)  # Almacenar los datos en la variable de instancia
 
-        for dato in datos:
+        for dato in self.datos:
             self.tree.insert("", "end", values=dato)
 
-        self.mostrar_grafico(datos)
+        self.mostrar_grafico(self.datos)
 
     def obtener_datos(self, anio, mes, dia):
         self.db.conectar()
@@ -146,23 +147,48 @@ class Informes(tk.Frame):
         self.cargar_datos(anio, mes, dia)
 
     def exportar_a_excel(self):
-        # Abrir cuadro de diálogo para seleccionar el archivo
         archivo = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
         if archivo:
-            datos = self.obtener_datos(self.combo_anio.get(), self.combo_mes.get(), self.combo_dia.get())
-            if datos:  # Verificamos que haya datos
-                df = pd.DataFrame(datos, columns=["RUT", "Fecha", "Menú"])
-                df.to_excel(archivo, index=False)
+            if self.datos:  # Utilizar los datos almacenados
+                df = pd.DataFrame(self.datos, columns=["RUT", "Fecha", "Menú"])
+                writer = pd.ExcelWriter(archivo, engine='xlsxwriter')
+                df.to_excel(writer, index=False, sheet_name='Informe')
+
+                # Ajustar el ancho de las columnas
+                workbook = writer.book
+                worksheet = writer.sheets['Informe']
+                for idx, col in enumerate(df):
+                    max_len = df[col].astype(str).map(len).max()
+                    worksheet.set_column(idx, idx, max_len + 2)
+
+                # Crear una tabla con las cantidades de cada menú
+                conteo_menus = {"A": 0, "B": 0, "C": 0}
+                for dato in self.datos:
+                    menu = dato[2]
+                    if menu in conteo_menus:
+                        conteo_menus[menu] += 1
+
+                # Escribir la tabla de cantidades a la derecha de la otra tabla
+                start_col = len(df.columns) + 2  # Dejar dos columnas de espacio
+                worksheet.write(0, start_col, "Menú")
+                worksheet.write(0, start_col + 1, "Cantidad")
+                row = 1
+                for menu, cantidad in conteo_menus.items():
+                    worksheet.write(row, start_col, menu)
+                    worksheet.write(row, start_col + 1, cantidad)
+                    row += 1
+
+                writer.close()  # Usar close() en lugar de save()
+                print(f"Datos exportados a Excel: {archivo}")
+            else:
+                print("No hay datos para exportar.")
 
     def exportar_a_pdf(self):
-        # Abrir cuadro de diálogo para seleccionar el archivo
         archivo = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
         if archivo:
-            # Crear PDF
             pdf = FPDF()
             pdf.add_page()
 
-            # Título
             pdf.set_font("Arial", 'B', 12)
             pdf.cell(200, 10, "Informe de Menús", ln=True, align="C")
 
@@ -177,41 +203,41 @@ class Informes(tk.Frame):
             pdf.ln()
 
             # Agregar filas
-            datos = self.obtener_datos(self.combo_anio.get(), self.combo_mes.get(), self.combo_dia.get())
-            if datos:  # Verificamos que haya datos
-                for dato in datos:
+            if self.datos:  # Utilizar los datos almacenados
+                for dato in self.datos:
                     pdf.cell(60, 10, str(dato[0]), border=1)
                     pdf.cell(60, 10, str(dato[1]), border=1)
                     pdf.cell(60, 10, str(dato[2]), border=1)
                     pdf.ln()
 
-            # Gráfico
-            fig, ax = plt.subplots(figsize=(6, 4))
-            conteo_menus = {"A": 0, "B": 0, "C": 0}
-            for dato in datos:
-                menu = dato[2]
-                if menu in conteo_menus:
-                    conteo_menus[menu] += 1
+                # Gráfico
+                fig, ax = plt.subplots(figsize=(6, 4))
+                conteo_menus = {"A": 0, "B": 0, "C": 0}
+                for dato in self.datos:
+                    menu = dato[2]
+                    if menu in conteo_menus:
+                        conteo_menus[menu] += 1
 
-            # Ordenar C después de B
-            orden_correcto = ["A", "B", "C"]
-            categorias = [m for m in orden_correcto if conteo_menus[m] > 0]
-            valores = [conteo_menus[m] for m in categorias]
+                orden_correcto = ["A", "B", "C"]
+                categorias = [m for m in orden_correcto if conteo_menus[m] > 0]
+                valores = [conteo_menus[m] for m in categorias]
 
-            bars = ax.bar(categorias, valores)
-            ax.set_title("Menús por Fecha")
+                bars = ax.bar(categorias, valores)
+                ax.set_title("Menús por Fecha")
 
-            # Guardar gráfico como imagen
-            grafico_img = "grafico.png"
-            fig.savefig(grafico_img)
+                # Guardar gráfico como imagen
+                grafico_img = "grafico.png"
+                fig.savefig(grafico_img)
 
-            # Insertar la imagen del gráfico en el PDF
-            pdf.ln(10)
-            pdf.image(grafico_img, x=50, w=100)
+                # Insertar la imagen del gráfico en el PDF
+                pdf.ln(10)
+                pdf.image(grafico_img, x=50, w=100)
 
-            # Guardar PDF
-            pdf.output(archivo)
+                # Guardar PDF
+                pdf.output(archivo)
 
-            # Eliminar la imagen del gráfico
-            os.remove(grafico_img)
-
+                # Eliminar la imagen del gráfico
+                os.remove(grafico_img)
+                print(f"Datos exportados a PDF: {archivo}")
+            else:
+                print("No hay datos para exportar.")
