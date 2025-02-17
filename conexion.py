@@ -1,5 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
+from config import DB_HOST,DB_NAME,DB_PASSWORD,DB_USER,PORT
 
 class Conexion:
     def __init__(self, usar_pool=False):
@@ -11,11 +12,11 @@ class Conexion:
         """Establece la conexión con la base de datos sin usar pool."""
         try:
             self.conexion = mysql.connector.connect(
-                host='localhost',
-                user='root',
-                password='admin',
-                database='casino',
-                port=3306
+                host=DB_HOST,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME,
+                port=PORT
             )
             self.cursor = self.conexion.cursor()
             print("Conexión obtenida.")
