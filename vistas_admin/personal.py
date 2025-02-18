@@ -12,6 +12,7 @@ class Personal(tk.Frame):
         super().__init__(padre)
         self.db = Conexion()  # Instanciamos la conexión a la BD
         self.db.conectar()  # Establecemos la conexión
+        self.estado = 1
         self.widgets()
         self.cargar_personal()  # Cargar los datos automáticamente
 
@@ -56,13 +57,12 @@ class Personal(tk.Frame):
         # Botón para ACTIVAR empleados
         tk.Button(self.botones_frame, text="✔️ Activar Empleado", command=self.activar_empleado, fg="blue", width=20, height=2).grid(row=3, column=0, pady=5)
         
-        # Opción para visualizar activos o inactivos
-        self.estado_var = tk.StringVar(value="activos")
-        tk.Radiobutton(self.botones_frame, text="Activos", variable=self.estado_var, value="activos", command=self.cargar_personal).grid(row=4, column=0, pady=5)
-        tk.Radiobutton(self.botones_frame, text="Inactivos", variable=self.estado_var, value="inactivos", command=self.cargar_personal).grid(row=5, column=0, pady=5)
+        # Botón para alternar entre activos e inactivos
+        self.boton_estado = tk.Button(self.botones_frame, text="Mostrar Inactivos", command=self.alternar_estado, width=20, height=2)
+        self.boton_estado.grid(row=4, column=0, pady=5)
 
         # Botón para generar clave única
-        tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=6, column=0, pady=5)
+        tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=5, column=0, pady=5)
 
         # Hacer el diseño responsivo
         self.grid_rowconfigure(1, weight=1)
@@ -77,13 +77,18 @@ class Personal(tk.Frame):
         for widget in self.treeview.get_children():
             self.treeview.delete(widget)
 
-        estado = 1 if self.estado_var.get() == "activos" else 0
         query = "SELECT rut, nombre, clave, estado FROM personas WHERE estado = %s"
-        self.db.cursor.execute(query, (estado,))
+        self.db.cursor.execute(query, (self.estado,))
         personas = self.db.cursor.fetchall()
 
         for persona in personas:
             self.treeview.insert("", "end", values=persona)
+
+    def alternar_estado(self):
+        """Alterna entre mostrar empleados activos e inactivos."""
+        self.estado = 0 if self.estado == 1 else 1
+        self.boton_estado.config(text="Mostrar Activos" if self.estado == 0 else "Mostrar Inactivos")
+        self.cargar_personal()
 
     def editar_celda(self, event):
         """Permite editar una celda al hacer doble clic."""
@@ -260,8 +265,7 @@ class Personal(tk.Frame):
             wb.close()  # Cerrar el archivo después de guardar
         except Exception as e:
             messagebox.showerror("Error", f"Error al sincronizar persona con el Excel: {e}")
-                
-        
+
     def desactivar_empleado(self):
         """Cambia el estado de un empleado a 'Inactivo'."""
         try:
@@ -278,7 +282,7 @@ class Personal(tk.Frame):
             messagebox.showwarning("Atención", "Seleccione un empleado para desactivar.")
         except Exception as e:
             messagebox.showerror("Error", f"Error al desactivar el empleado: {e}")
-    
+
     def activar_empleado(self):
         """Cambia el estado de un empleado a 'Activo'."""
         try:
@@ -295,7 +299,7 @@ class Personal(tk.Frame):
             messagebox.showwarning("Atención", "Seleccione un empleado para activar.")
         except Exception as e:
             messagebox.showerror("Error", f"Error al activar el empleado: {e}")
-               
+
     def generar_clave_unica(self):
         """Genera una clave única de 4 dígitos que no esté repetida en la base de datos y la copia al portapapeles."""
         while True:
