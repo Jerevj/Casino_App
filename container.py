@@ -5,14 +5,13 @@ from vistas_admin.minutas import Minutas
 from vistas_admin.personal import Personal
 from vistas_admin.menus_inscritos import MenusInscritos
 from vistas_admin.subir import Subir
-from vistas_admin.informes import Informes 
-import sys
-import os
+from vistas_admin.informes import Informes
 
 class Container(tk.Frame):
-    def __init__(self, padre, controlador):
+    def __init__(self, padre, controlador, db_connection):
         super().__init__(padre)
         self.controlador = controlador
+        self.db_connection = db_connection  # Guardar la conexión
         self.grid(row=0, column=0, sticky="nsew")  # Usamos grid para el contenedor principal
 
         self.frames = {}
@@ -43,7 +42,7 @@ class Container(tk.Frame):
         # Ahora configuramos el contenedor principal para que los frames (contenido) se ajusten correctamente
         self.frames = {}
         for i in (Minutas, Personal, MenusInscritos, Subir, Informes, Extra):
-            frame = i(self)
+            frame = i(self, self.db_connection)
             self.frames[i] = frame
             frame.grid(row=1, column=0, sticky="nsew")  # Contenido debajo del navbar
         self.show_frames(Minutas)
@@ -60,11 +59,6 @@ class Container(tk.Frame):
     def show_frames(self, container):
         frame = self.frames[container]
         frame.tkraise()
-        # Asegurarse de recargar los datos cuando se muestra el frame
-        '''if hasattr(frame, 'cargar_minutas'):
-            frame.cargar_minutas()
-        elif hasattr(frame, 'cargar_personal'):
-            frame.cargar_personal()'''
 
     def Minutas(self):
         self.show_frames(Minutas)
@@ -83,23 +77,3 @@ class Container(tk.Frame):
 
     def extra(self):
         self.show_frames(Extra)
-
-'''    def widgets(self):
-        navbar = Frame(self, bg="#ddd")
-        navbar.grid(row=0, column=0, sticky="ew")
-
-        buttons = [
-            ("Menus", Menus),
-            ("Personal", Personal),
-            ("Menus Inscritos", MenusInscritos),
-            ("Subir", Subir),
-            ("Informes", Informes),
-            ("Extra", Extra),
-        ]
-
-        for idx, (text, frame) in enumerate(buttons):
-            btn = Button(navbar, text=text, command=lambda f=frame: self.show_frame(f))
-            btn.grid(row=0, column=idx, padx=2, pady=2)
-
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)'''

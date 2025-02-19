@@ -3,11 +3,13 @@ from tkinter import messagebox, ttk
 import mysql.connector
 import bcrypt
 from utils.excel_utils import excel_manager
+
 class Extra(tk.Frame):
 
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
         self.padre = padre
+        self.db_connection = db_connection  # Guardar la conexión
         self.menus_ventana_abierta = None  # Variable para controlar la ventana de menús abierta
         self.widgets()
 
@@ -127,16 +129,11 @@ class Extra(tk.Frame):
             # Encriptar la contraseña
             hashed_clave = bcrypt.hashpw(clave.encode('utf-8'), bcrypt.gensalt())
 
-            # Conectar a la base de datos
-            conexion = mysql.connector.connect(host="localhost", user="root", password="admin", database="casino")
-            cursor = conexion.cursor()
-
             # Insertar el nuevo usuario en la base de datos
-            cursor.execute("INSERT INTO usuarios (usuario, clave) VALUES (%s, %s)", (usuario, hashed_clave))
-            conexion.commit()
+            self.db_connection.cursor.execute("INSERT INTO usuarios (usuario, clave) VALUES (%s, %s)", (usuario, hashed_clave))
+            self.db_connection.commit()
 
-            # Cerrar la conexión y la ventana
-            conexion.close()
+            # Cerrar la ventana
             ventana_usuario.destroy()
 
             messagebox.showinfo("Éxito", "Nuevo usuario agregado correctamente")

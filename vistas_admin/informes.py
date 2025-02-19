@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 import datetime
-from conexion import Conexion
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import pandas as pd
@@ -9,8 +8,9 @@ from fpdf import FPDF
 import os
 
 class Informes(tk.Frame):
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
+        self.db_connection = db_connection  # Guardar la conexión
 
         # Crear Canvas para agregar scroll
         self.canvas = tk.Canvas(self)
@@ -22,16 +22,11 @@ class Informes(tk.Frame):
         )
 
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        self.canvas.configure(yscrollcommand=self.scrollbar.set)
-
-        self.canvas.pack(side="left", fill="both", expand=True)
+        self.canvas.pack(fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        self.db = Conexion()
-        self.db.conectar()
         self.datos = []  # Variable de instancia para almacenar los datos
         self.widgets()
-        self.cargar_datos()
 
     def widgets(self):
         self.frame_filtros = tk.Frame(self.scrollable_frame)
@@ -93,8 +88,6 @@ class Informes(tk.Frame):
         self.mostrar_grafico(self.datos)
 
     def obtener_datos(self, anio, mes, dia):
-        self.db.conectar()
-
         query = "SELECT rut, fecha_registro, menu FROM menus_registrados WHERE YEAR(fecha_registro) = %s"
         parametros = [anio]
 
@@ -106,9 +99,8 @@ class Informes(tk.Frame):
             query += " AND DAY(fecha_registro) = %s"
             parametros.append(dia)
 
-        self.db.cursor.execute(query, parametros)
-        datos = self.db.cursor.fetchall()
-        self.db.desconectar()
+        self.db_connection.cursor.execute(query, parametros)
+        datos = self.db_connection.cursor.fetchall()
         return datos
 
     def mostrar_grafico(self, datos):

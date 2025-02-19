@@ -1,20 +1,17 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
-from conexion import Conexion  # Para conexión a la base de datos
 from boleta import crear_boleta  # Para la generación de boletas
 from utils.excel_utils import excel_manager  # Para obtener los menús desde el Excel
 
 class VistaUsuario(tk.Frame):
-    def __init__(self, padre, controlador):
+    def __init__(self, padre, controlador, db_connection):
         super().__init__(padre)
         self.controlador = controlador
+        self.db_connection = db_connection  # Guardar la conexión
         self.pack()
         self.place(x=0, y=0, width=1100, height=650)
 
-        # Crear instancia de conexión a la base de datos
-        self.db = Conexion()
-        self.db.conectar()  # Conectar a la base de datos
         self.widgets()
 
         # Manejar el cierre de la ventana
@@ -97,14 +94,14 @@ class VistaUsuario(tk.Frame):
 
         try:
             # Buscar la persona en la base de datos
-            persona = self.db.obtener_persona_por_clave(clave)
+            persona = self.db_connection.obtener_persona_por_clave(clave)
             if persona:
                 rut = persona[0]
                 nombre = persona[1]
 
                 # Verificar si ya existe una boleta registrada para ese día
-                boleta_existente = self.db.obtener_boleta_por_rut_y_fecha(rut, fecha_actual)
-                if boleta_existente:
+                boleta_existente = self.db_connection.obtener_boleta_por_rut_y_fecha(rut, fecha_actual)
+                if (boleta_existente):
                     messagebox.showwarning("Advertencia", "Ya se ha generado una boleta para hoy.")
                     self.boton_generar.config(state="normal")  # Habilitar el botón
                     return  # Si ya existe, no generamos otra boleta
@@ -116,7 +113,7 @@ class VistaUsuario(tk.Frame):
                     nombre_menu = excel_manager.obtener_nombre_menu(dia_mes, opcion_menu)
                     if nombre_menu:
                         # Registrar boleta en la base de datos
-                        id_boleta = self.db.registrar_boleta(rut, opcion_menu, nombre_menu, fecha_actual)
+                        id_boleta = self.db_connection.registrar_boleta(rut, opcion_menu, nombre_menu, fecha_actual)
 
                         if id_boleta:
                             # Generar boleta
@@ -158,10 +155,10 @@ class VistaUsuario(tk.Frame):
         """Cierra la conexión antes de cerrar la ventana."""
         self.ventana_abierta = False  # Marca que la ventana está cerrada
         print("Cerrando la ventana...")
-        self.db.desconectar()
+        self.db_connection.desconectar()
         self.master.destroy()
 
     def __del__(self):
         """Asegurarse de que la conexión se cierre si no se llama a cerrar_ventana explícitamente."""
-        self.db.desconectar()
+        self.db_connection.desconectar()
         print("Base de datos desconectada")

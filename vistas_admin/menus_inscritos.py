@@ -1,16 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import traceback
-from conexion import Conexion  # Asegúrate de que este archivo tenga la clase Conexion adecuada
 
 class MenusInscritos(tk.Frame):
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
+        self.db_connection = db_connection  # Guardar la conexión
         self.grid(row=0, column=0, sticky="nsew")
-
-        # Crear conexión una sola vez
-        self.db = Conexion()
-        self.db.conectar()
 
         self.widgets()
         
@@ -69,11 +65,11 @@ class MenusInscritos(tk.Frame):
                 self.tree.delete(row)
 
             # Asegurar que la base de datos refleje los cambios antes de cargar
-            self.db.conexion.commit()
+            self.db_connection.conexion.commit()
 
             query = "SELECT id_boleta, rut, menu, nombre_menu, registrado, estado_dia, fecha_registro FROM menus_registrados ORDER BY fecha_registro DESC"
-            self.db.cursor.execute(query)
-            rows = self.db.cursor.fetchall()
+            self.db_connection.cursor.execute(query)
+            rows = self.db_connection.cursor.fetchall()
 
             if rows:
                 for row in rows:
@@ -84,7 +80,6 @@ class MenusInscritos(tk.Frame):
         except Exception as e:
             messagebox.showerror("Error", f"No se pudo cargar la tabla.\n{e}")
             print(traceback.format_exc())
-
 
     def actualizar_estado(self):
         """Abre una ventana emergente para modificar el estado del día"""
@@ -113,7 +108,6 @@ class MenusInscritos(tk.Frame):
         self.estado_menu.pack(pady=10)
 
         tk.Button(self.ventana_estado, text="Guardar", command=self.guardar_estado).pack(pady=10)
-
 
     def guardar_estado(self):
         """Guarda el nuevo estado en la base de datos y actualiza solo la fila correspondiente"""
@@ -144,9 +138,9 @@ class MenusInscritos(tk.Frame):
 
             # Actualización en la base de datos
             query = "UPDATE menus_registrados SET estado_dia = %s, registrado = %s WHERE id_boleta = %s"
-            self.db.cursor.execute(query, (nuevo_estado, registrado, self.id_boleta_seleccionada))
-            filas_afectadas = self.db.cursor.rowcount  # Número de filas afectadas
-            self.db.conexion.commit()
+            self.db_connection.cursor.execute(query, (nuevo_estado, registrado, self.id_boleta_seleccionada))
+            filas_afectadas = self.db_connection.cursor.rowcount  # Número de filas afectadas
+            self.db_connection.conexion.commit()
 
             print(f"Filas afectadas por la actualización: {filas_afectadas}")  # Depuración
 
@@ -168,11 +162,10 @@ class MenusInscritos(tk.Frame):
             messagebox.showerror("Error", f"No se pudo actualizar el estado.\n{e}")
             print(traceback.format_exc())
 
-
     def cerrar_conexion(self):
         """Cierra la conexión a la base de datos al salir"""
         try:
-            self.db.desconectar()
+            self.db_connection.desconectar()
         except Exception as e:
             print(f"Error al cerrar la conexión: {e}")
         finally:

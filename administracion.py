@@ -1,14 +1,11 @@
 from tkinter import *
 from tkinter import ttk
-#from login import Login
-#from login import Registro
 from container import Container
-import sys
-import os
 
 class Administracion(Tk):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, db_connection, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.db_connection = db_connection  # Guardar la conexión
         self.title("Administracion Casino")
         self.geometry("1100x650+120+20")
         self.resizable(True, True)
@@ -18,7 +15,7 @@ class Administracion(Tk):
         container.configure(bg="lightblue")
 
         self.frames = {}
-        frame = Container(container, self)
+        frame = Container(container, self, self.db_connection)
         self.frames[Container] = frame
         frame.pack(fill=BOTH, expand=True)
 
@@ -26,11 +23,6 @@ class Administracion(Tk):
 
         self.style = ttk.Style()
         self.style.theme_use("clam")
-        
-        '''self.frames = {}
-        for i in (Login, Registro, Container):
-            frame = i(container, self)
-            self.frames[i]= frame'''
 
         # Manejo del cierre de la ventana de administración
         self.protocol("WM_DELETE_WINDOW", self.on_close)

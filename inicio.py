@@ -5,8 +5,9 @@ from vista_usuario import VistaUsuario
 from login import Login
 
 class Inicio(tk.Tk):
-    def __init__(self):
+    def __init__(self, db_connection):
         super().__init__()
+        self.db_connection = db_connection  # Guardar la conexión
         self.title("Casino - Selección de Modo")
         self.geometry("400x300+400+200")
         self.resizable(True, True)
@@ -32,6 +33,7 @@ class Inicio(tk.Tk):
 
     def on_close(self):
         """Método para manejar el cierre de la ventana principal."""
+        self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
         self.quit()  # Termina el mainloop y cierra la aplicación
 
     def modo_usuario(self):
@@ -41,7 +43,7 @@ class Inicio(tk.Tk):
             self.btn_usuario.config(state="disabled")  # Deshabilita el botón mientras la ventana está abierta
 
             nueva_ventana = tk.Toplevel(self)  # Crea una nueva ventana secundaria
-            vista_usuario = VistaUsuario(nueva_ventana, self)  # Pasa la nueva ventana y el controlador (self)
+            vista_usuario = VistaUsuario(nueva_ventana, self, self.db_connection)  # Pasa la nueva ventana, el controlador (self) y la conexión
             vista_usuario.pack(fill="both", expand=True)  # Empaqueta el frame
 
             nueva_ventana.protocol("WM_DELETE_WINDOW", self.on_close_usuario)  # Controlar el cierre de la ventana
@@ -54,5 +56,5 @@ class Inicio(tk.Tk):
 
     def modo_administrador(self):
         """Lógica para abrir el modo administrador."""
-        login = Login(self)
+        login = Login(self, self.db_connection)  # Pasar la conexión al login
         login.grab_set()  # Bloquea la ventana principal hasta que se cierre la ventana de login

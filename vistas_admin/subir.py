@@ -7,8 +7,9 @@ from utils.excel_utils import ExcelManager
 from config import MINUTA_FILE_PATH, MENUS_FILE_PATH, BACKUP_FOLDER
 
 class Subir(tk.Frame):
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
+        self.db_connection = db_connection  # Guardar la conexión
         self.minuta_file_path = None
         self.menus_file_path = None
         self.current_minuta_file = MINUTA_FILE_PATH

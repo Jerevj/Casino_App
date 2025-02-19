@@ -3,15 +3,13 @@ import re
 from tkinter import *
 from tkinter import ttk, messagebox
 import tkinter as tk
-from conexion import Conexion  # Importar la clase Conexion
 from utils.excel_utils import excel_manager  # Importar el gestor de Excel
 from openpyxl import load_workbook
 
 class Personal(tk.Frame):
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
-        self.db = Conexion()  # Instanciamos la conexión a la BD
-        self.db.conectar()  # Establecemos la conexión
+        self.db_connection = db_connection  # Guardar la conexión
         self.estado = 1
         self.widgets()
         self.cargar_personal()  # Cargar los datos automáticamente
@@ -78,8 +76,8 @@ class Personal(tk.Frame):
             self.treeview.delete(widget)
 
         query = "SELECT rut, nombre, clave, estado FROM personas WHERE estado = %s"
-        self.db.cursor.execute(query, (self.estado,))
-        personas = self.db.cursor.fetchall()
+        self.db_connection.cursor.execute(query, (self.estado,))
+        personas = self.db_connection.cursor.fetchall()
 
         for persona in personas:
             self.treeview.insert("", "end", values=persona)
@@ -121,8 +119,8 @@ class Personal(tk.Frame):
                     entry.destroy()
                     return
                 query = "SELECT * FROM personas WHERE rut = %s"
-                self.db.cursor.execute(query, (nuevo_valor,))
-                if self.db.cursor.fetchone():
+                self.db_connection.cursor.execute(query, (nuevo_valor,))
+                if self.db_connection.cursor.fetchone():
                     messagebox.showwarning("Error", "Ya existe un empleado con este RUT.")
                     entry.destroy()
                     return
@@ -138,8 +136,8 @@ class Personal(tk.Frame):
                     entry.destroy()
                     return
                 query = "SELECT * FROM personas WHERE clave = %s"
-                self.db.cursor.execute(query, (nuevo_valor,))
-                if self.db.cursor.fetchone():
+                self.db_connection.cursor.execute(query, (nuevo_valor,))
+                if self.db_connection.cursor.fetchone():
                     messagebox.showwarning("Error", "Ya existe un empleado con esta clave.")
                     entry.destroy()
                     return
@@ -156,8 +154,8 @@ class Personal(tk.Frame):
             campos = ["rut", "nombre", "clave", "estado"]
             campo_a_modificar = campos[col_idx]
             query = f"UPDATE personas SET {campo_a_modificar} = %s WHERE rut = %s"
-            self.db.cursor.execute(query, (nuevo_valor, rut))
-            self.db.conexion.commit()
+            self.db_connection.cursor.execute(query, (nuevo_valor, rut))
+            self.db_connection.conexion.commit()
 
             # Sincronizar cambios con el Excel
             self.sincronizar_persona_con_excel(rut, valores[1])  # Pasar el RUT y el nombre
@@ -208,8 +206,8 @@ class Personal(tk.Frame):
 
             # Verificar que la clave sea única
             query = "SELECT * FROM personas WHERE clave = %s"
-            self.db.cursor.execute(query, (clave,))
-            if self.db.cursor.fetchone():
+            self.db_connection.cursor.execute(query, (clave,))
+            if self.db_connection.cursor.fetchone():
                 messagebox.showwarning("Error", "Ya existe un empleado con esta clave.")
                 return
 
@@ -228,8 +226,8 @@ class Personal(tk.Frame):
 
             query = "INSERT INTO personas (rut, nombre, clave, estado) VALUES (%s, %s, %s, %s)"
             try:
-                self.db.cursor.execute(query, (rut, nombre_formateado, clave, 1))
-                self.db.conexion.commit()
+                self.db_connection.cursor.execute(query, (rut, nombre_formateado, clave, 1))
+                self.db_connection.conexion.commit()
                 self.sincronizar_persona_con_excel(rut, nombre_formateado)  # Sincronizar con Excel
                 self.cargar_personal()
                 messagebox.showinfo("Éxito", "Empleado agregado correctamente.")
@@ -272,8 +270,8 @@ class Personal(tk.Frame):
             item = self.treeview.selection()[0]
             rut = self.treeview.item(item, "values")[0]
             query = "UPDATE personas SET estado = 0 WHERE rut = %s"
-            self.db.cursor.execute(query, (rut,))
-            self.db.conexion.commit()
+            self.db_connection.cursor.execute(query, (rut,))
+            self.db_connection.conexion.commit()
             print(f"Empleado {rut} desactivado en la base de datos.")  # Mensaje de depuración
             self.sincronizar_persona_con_excel(rut, None, desactivar=True)  # Sincronizar con Excel
             self.cargar_personal()
@@ -289,8 +287,8 @@ class Personal(tk.Frame):
             item = self.treeview.selection()[0]
             rut = self.treeview.item(item, "values")[0]
             query = "UPDATE personas SET estado = 1 WHERE rut = %s"
-            self.db.cursor.execute(query, (rut,))
-            self.db.conexion.commit()
+            self.db_connection.cursor.execute(query, (rut,))
+            self.db_connection.conexion.commit()
             print(f"Empleado {rut} Activado en la base de datos.")  # Mensaje de depuración
             self.sincronizar_persona_con_excel(rut, None, desactivar=False)  # Sincronizar con Excel
             self.cargar_personal()
@@ -305,8 +303,8 @@ class Personal(tk.Frame):
         while True:
             clave = f"{random.randint(0, 9999):04d}"
             query = "SELECT * FROM personas WHERE clave = %s"
-            self.db.cursor.execute(query, (clave,))
-            if not self.db.cursor.fetchone():
+            self.db_connection.cursor.execute(query, (clave,))
+            if not self.db_connection.cursor.fetchone():
                 self.clipboard_clear()
                 self.clipboard_append(clave)
                 messagebox.showinfo("Clave Generada", f"La clave generada es: {clave}\nLa clave ha sido copiada al portapapeles.")
@@ -314,16 +312,6 @@ class Personal(tk.Frame):
 
     def on_closing(self):
         """Cierra la conexión cuando la ventana se cierra."""
-        self.db.desconectar()
+        self.db_connection.desconectar()
         self.master.destroy()
 
-# Ejemplo de uso
-if __name__ == "__main__":
-    root = Tk()
-    root.title("Mantenedor de Personal")
-    root.geometry("800x500")
-    root.resizable(True, True)  # Permitir que la ventana cambie de tamaño
-    personal_frame = Personal(root)
-    personal_frame.pack(fill=BOTH, expand=True)
-    root.protocol("WM_DELETE_WINDOW", personal_frame.on_closing)
-    root.mainloop()

@@ -2,15 +2,13 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from utils.excel_utils import excel_manager
 from openpyxl import load_workbook
-from conexion import Conexion
 
 class Minutas(tk.Frame):
-    def __init__(self, padre):
+    def __init__(self, padre, db_connection):
         super().__init__(padre)
+        self.db_connection = db_connection  # Guardar la conexión
         self.data = []
         self.column_names = ['Día', 'Menú A', 'Menú B', 'Menú C']
-        self.db = Conexion()
-        self.db.conectar()
         self.widgets()
         # Eliminar la llamada a cargar_minutas desde aquí
 
@@ -48,8 +46,8 @@ class Minutas(tk.Frame):
             ruts_excel = {sheet.cell(row=i, column=1).value for i in range(2, sheet.max_row + 1)}
             
             # Obtener lista de empleados activos desde la BD
-            self.db.cursor.execute("SELECT rut, nombre FROM personas WHERE estado = 1")
-            empleados = self.db.cursor.fetchall()
+            self.db_connection.cursor.execute("SELECT rut, nombre FROM personas WHERE estado = 1")
+            empleados = self.db_connection.cursor.fetchall()
             
             fila_actual = sheet.max_row + 1
             for rut, nombre in empleados:
@@ -105,8 +103,8 @@ class Minutas(tk.Frame):
                     continue  # Saltar filas duplicadas
                 ruts_vistos.add(rut)
                 # Verificar si el RUT está activo en la base de datos
-                self.db.cursor.execute("SELECT estado FROM personas WHERE rut = %s", (rut,))
-                estado = self.db.cursor.fetchone()
+                self.db_connection.cursor.execute("SELECT estado FROM personas WHERE rut = %s", (rut,))
+                estado = self.db_connection.cursor.fetchone()
                 if estado and estado[0] == 1:  # Solo mostrar si el estado es activo (1)
                     self.tree.insert('', 'end', values=row)
                 else:
