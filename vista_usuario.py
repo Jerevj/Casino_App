@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
-from boleta import crear_boleta  # Para la generación de boletas
+from boleta import imprimir_boleta  # Importar la función para imprimir la boleta
 from utils.excel_utils import excel_manager  # Para obtener los menús desde el Excel
 
 class VistaUsuario(tk.Frame):
@@ -97,48 +97,53 @@ class VistaUsuario(tk.Frame):
             persona = self.db_connection.obtener_persona_por_clave(clave)
             if persona:
                 rut = persona[0]
-                nombre = persona[1]
-
-                # Verificar si ya existe una boleta registrada para ese día
+                nombre_completo = persona[1]
+                nombre_partes = nombre_completo.split()
+                if len(nombre_partes) >= 3:
+                    nombre = nombre_partes[0] + " " + nombre_partes[2]  # Primer apellido y primer nombre
+                else:
+                    nombre = nombre_completo  # Si no hay al menos tres partes, usar el nombre completo
                 boleta_existente = self.db_connection.obtener_boleta_por_rut_y_fecha(rut, fecha_actual)
-                if (boleta_existente):
+                if boleta_existente:
                     messagebox.showwarning("Advertencia", "Ya se ha generado una boleta para hoy.")
                     self.boton_generar.config(state="normal")  # Habilitar el botón
                     return  # Si ya existe, no generamos otra boleta
 
                 # Buscar la opción de menú en el Excel
                 opcion_menu = excel_manager.obtener_menu_desde_excel(rut, dia_mes)
-                if opcion_menu:
-                    # Obtener el nombre del menú
-                    nombre_menu = excel_manager.obtener_nombre_menu(dia_mes, opcion_menu)
-                    if nombre_menu:
-                        # Registrar boleta en la base de datos
-                        id_boleta = self.db_connection.registrar_boleta(rut, opcion_menu, nombre_menu, fecha_actual)
+                if opcion_menu not in ["A", "B", "C"]:
+                    opcion_menu = "A"  # Asignar "A" por defecto si la opción no es válida
 
-                        if id_boleta:
-                            # Generar boleta
-                            crear_boleta(opcion_menu, nombre, rut, fecha_actual.strftime('%d/%m/%Y'), nombre_menu, id_boleta)
-                            print("Boleta generada, llamando a mostrar_boleta_generada...")
-                            # Usar `after()` para asegurarse de que el ciclo de eventos se actualice
-                            self.after(0, self.mostrar_boleta_generada) 
+                # Obtener el nombre del menú
+                nombre_menu = excel_manager.obtener_nombre_menu(dia_mes, opcion_menu)
+                if nombre_menu:
+                    # Truncar el nombre del menú si es demasiado largo
+                    nombre_menu = nombre_menu[:50]  # Ajusta el tamaño según el límite de tu base de datos
 
-                        else:
-                            messagebox.showerror("Error", "No se pudo registrar la boleta.")
-                            self.boton_generar.config(state="normal")  # Habilitar el botón
+                    # Registrar boleta en la base de datos
+                    id_boleta = self.db_connection.registrar_boleta(rut, opcion_menu, nombre_menu, fecha_actual)
+
+                    if id_boleta:
+                        # Generar e imprimir la boleta
+                        imprimir_boleta(opcion_menu, nombre_menu, nombre, rut, id_boleta)
+                        print("Boleta generada, llamando a mostrar_boleta_generada...")
+                        # Usar `after()` para asegurarse de que el ciclo de eventos se actualice
+                        self.after(0, self.mostrar_boleta_generada) 
+
                     else:
-                        messagebox.showerror("Error", "No se encontró el nombre del menú.")
+                        messagebox.showerror("Error", "No se pudo registrar la boleta.")
                         self.boton_generar.config(state="normal")  # Habilitar el botón
                 else:
-                    messagebox.showerror("Error", "No hay menú asignado para este día.")
+                    messagebox.showerror("Error", "No se encontró el nombre del menú.")
                     self.boton_generar.config(state="normal")  # Habilitar el botón
             else:
                 messagebox.showerror("Error", "Clave no encontrada.")
                 self.boton_generar.config(state="normal")  # Habilitar el botón
-            
+        
         except Exception as e:
             messagebox.showerror("Error", f"Hubo un error al obtener el almuerzo: {e}")
             self.boton_generar.config(state="normal")  # Habilitar el botón
-        
+
     def mostrar_boleta_generada(self):
         """Muestra el mensaje de éxito y habilita el botón nuevamente."""
         self.update_idletasks()  # Forzar actualización de la UI

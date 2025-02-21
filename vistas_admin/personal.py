@@ -18,9 +18,15 @@ class Personal(tk.Frame):
         # Etiqueta de título
         tk.Label(self, text="Mantenedor de Personal", font=("Arial", 16)).grid(row=0, column=0, pady=10, columnspan=3)
 
+        # Campo de búsqueda
+        tk.Label(self, text="Buscar por Nombre o RUT:").grid(row=1, column=0, pady=5, padx=10, sticky=W)
+        self.search_entry = tk.Entry(self)
+        self.search_entry.grid(row=1, column=1, pady=5, padx=10, sticky=W)
+        self.search_entry.bind("<KeyRelease>", self.buscar_personal)
+
         # Frame para la tabla
         self.tabla_frame = Frame(self)
-        self.tabla_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
+        self.tabla_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
         # Crear el Treeview
         self.treeview = ttk.Treeview(self.tabla_frame, columns=("RUT", "Nombre", "Clave", "Estado"), show="headings")
@@ -41,7 +47,7 @@ class Personal(tk.Frame):
 
         # Frame para los botones
         self.botones_frame = Frame(self)
-        self.botones_frame.grid(row=1, column=2, padx=10, pady=5, sticky="nsew")
+        self.botones_frame.grid(row=2, column=2, padx=10, pady=5, sticky="nsew")
 
         # Botón para actualizar la tabla
         tk.Button(self.botones_frame, text="🔄 Actualizar Personal", command=self.cargar_personal, width=20, height=2).grid(row=0, column=0, pady=5)
@@ -63,7 +69,7 @@ class Personal(tk.Frame):
         tk.Button(self.botones_frame, text="🔑 Generar Clave Única", command=self.generar_clave_unica, width=20, height=2).grid(row=5, column=0, pady=5)
 
         # Hacer el diseño responsivo
-        self.grid_rowconfigure(1, weight=1)
+        self.grid_rowconfigure(2, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(2, weight=0)
@@ -77,10 +83,20 @@ class Personal(tk.Frame):
 
         query = "SELECT rut, nombre, clave, estado FROM personas WHERE estado = %s"
         self.db_connection.cursor.execute(query, (self.estado,))
-        personas = self.db_connection.cursor.fetchall()
+        self.personas = self.db_connection.cursor.fetchall()
 
-        for persona in personas:
+        for persona in self.personas:
             self.treeview.insert("", "end", values=persona)
+
+    def buscar_personal(self, event):
+        """Filtra los datos de la tabla personas en el Treeview según el texto de búsqueda."""
+        search_text = self.search_entry.get().lower()
+        for widget in self.treeview.get_children():
+            self.treeview.delete(widget)
+
+        for persona in self.personas:
+            if search_text in persona[0].lower() or search_text in persona[1].lower():
+                self.treeview.insert("", "end", values=persona)
 
     def alternar_estado(self):
         """Alterna entre mostrar empleados activos e inactivos."""
@@ -314,4 +330,3 @@ class Personal(tk.Frame):
         """Cierra la conexión cuando la ventana se cierra."""
         self.db_connection.desconectar()
         self.master.destroy()
-

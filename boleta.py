@@ -1,81 +1,74 @@
-import tkinter as tk
-from tkinter import Canvas
-from tkinter.font import Font
-from random import randint
 import win32print
 import win32ui
-from PIL import ImageWin
+import win32con
+from datetime import datetime
+import random
+import textwrap
 
-def crear_boleta(menu, nombre, rut, fecha, menu_descripcion, id_boleta):
-    """Crear la ventana de la boleta de almuerzo con el formato proporcionado y la opción de imprimirla."""
-    if " " in nombre:  # Reordena si hay más de una palabra
-        nombre_parts = nombre.split()
-        nombre = f"{nombre_parts[1]} {nombre_parts[0]}" if len(nombre_parts) >= 2 else nombre_parts[0]
-    else:
-        nombre = nombre  # Deja el nombre tal cual si tiene una sola palabra
+class Boleta:
+    def __init__(self, menu_letra, menu_nombre, nombre_persona, rut_persona, id_boleta):
+        self.menu_letra = menu_letra
+        self.menu_nombre = menu_nombre
+        self.nombre_persona = nombre_persona
+        self.rut_persona = rut_persona
+        self.fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.id_boleta = id_boleta
 
-    # Crear la interfaz gráfica de la boleta (pantalla)
-    root = tk.Tk()
-    root.title("Boleta de Almuerzo")
-    root.geometry("300x500")
-    root.configure(bg="white")
+    def __str__(self):
+        menu_nombre_wrapped = "\n".join(textwrap.wrap(self.menu_nombre, width=30))
+        return (f"==============================\n"
+                f"          Knop - Casino          \n"
+                f"==============================\n"
+                f"Menú: {self.menu_letra}\n"
+                f"{menu_nombre_wrapped}\n"
+                f"---------------------------------------------\n"
+                f"Nombre: {self.nombre_persona}\n"
+                f"RUT: {self.rut_persona}\n"
+                f"---------------------------------------------\n"
+                f"Fecha: {self.fecha}\n"
+                f"ID Boleta: {self.id_boleta}\n"
+                f"==============================\n")
 
-    canvas = Canvas(root, width=300, height=500, bg="white", highlightthickness=0)
-    canvas.pack()
-
-    title_font = Font(family="Helvetica", size=16, weight="bold")
-    text_font = Font(family="Helvetica", size=12)
-    name_font = Font(family="Helvetica", size=10)
-
-    canvas.create_text(150, 50, text="MENU", font=title_font)
-    canvas.create_text(150, 80, text=menu, font=title_font)
-    canvas.create_text(150, 110, text=f"{fecha}", font=text_font)
-
-    canvas.create_line(20, 130, 280, 130, dash=(3, 2))
-    canvas.create_text(150, 160, text=menu_descripcion, font=text_font)
-    canvas.create_line(20, 200, 280, 200, dash=(3, 2))
-
-    canvas.create_text(40, 230, text="NOMBRE: ", font=text_font, anchor="w")
-    canvas.create_text(270, 230, text=nombre, font=name_font, anchor="e")
-    canvas.create_text(40, 260, text="RUT: ", font=text_font, anchor="w")
-    canvas.create_text(230, 260, text=rut, font=text_font)
-
-    canvas.create_text(150, 290, text="Boleta para retiro de almuerzo", font=text_font)
-    canvas.create_text(150, 320, text=f"ID BOLETA: {id_boleta}", font=text_font)
-
-    barcode_y = 360
-    for i in range(20, 280, 10):
-        altura = randint(20, 40)
-        canvas.create_line(i, barcode_y, i, barcode_y + altura, width=2)
-
-    # Función para imprimir la boleta
-    def imprimir_boleta():
-        try:
-            printer_name = win32print.GetDefaultPrinter()  # Obtener impresora predeterminada
-            hprinter = win32print.OpenPrinter(printer_name)  # Abrir la impresora
-            printer_info = win32print.GetPrinter(hprinter, 2)  # Obtener información de la impresora
-
-            # Crear el contexto de la impresora
-            hdc = win32ui.CreateDC()
-            hdc.CreatePrinterDC(printer_name)
-            hdc.StartDoc("Boleta de Almuerzo")
-            hdc.StartPage()
-
-            # Dibujar el texto en la impresora
-            hdc.TextOut(100, 100, f"MENU: {menu}")
-            hdc.TextOut(100, 150, f"Fecha: {fecha}")
-            hdc.TextOut(100, 200, f"Nombre: {nombre}")
-            hdc.TextOut(100, 250, f"RUT: {rut}")
-            hdc.TextOut(100, 300, f"ID BOLETA: {id_boleta}")
-            hdc.TextOut(100, 350, f"Descripción: {menu_descripcion}")
-
-            hdc.EndPage()
-            hdc.EndDoc()
-            hdc.DeleteDC()
-        except Exception as e:
-            print(f"Error al imprimir la boleta: {e}")
-
-    # Botón para imprimir la boleta
-    tk.Button(root, text="Imprimir Boleta", command=imprimir_boleta).pack(pady=20)
-
-    root.mainloop()
+def imprimir_boleta(menu_letra, menu_nombre, nombre_persona, rut_persona, id_boleta):
+    boleta = Boleta(menu_letra, menu_nombre, nombre_persona, rut_persona, id_boleta)
+    printer_name = win32print.GetDefaultPrinter()
+    hprinter = win32print.OpenPrinter(printer_name)
+    try:
+        hdc = win32ui.CreateDC()
+        hdc.CreatePrinterDC(printer_name)
+        
+        hdc.StartDoc("Boleta")
+        hdc.StartPage()
+        
+        # Ajustar la posición y el tamaño del texto
+        hdc.SetMapMode(win32con.MM_TWIPS)
+        hdc.SetTextAlign(win32con.TA_CENTER)
+        
+        # Configurar la fuente para el menú (más grande)
+        font_menu = win32ui.CreateFont({
+            "name": "Arial",
+            "height": -300,  # Tamaño de la fuente (más grande)
+            "weight": win32con.FW_BOLD
+        })
+        
+        # Configurar la fuente para el resto del texto
+        font_text = win32ui.CreateFont({
+            "name": "Arial",
+            "height": -200,  # Tamaño de la fuente (estándar)
+            "weight": win32con.FW_BOLD
+        })
+        
+        # Imprimir cada línea de la boleta centrada
+        y = -100
+        for line in str(boleta).split('\n'):
+            if "Menú" in line or boleta.menu_nombre in line:
+                hdc.SelectObject(font_menu)
+            else:
+                hdc.SelectObject(font_text)
+            hdc.TextOut(2000, y, line)  # Ajustar la coordenada x para centrar el texto
+            y -= 300  # Reducir el espacio entre líneas
+        
+        hdc.EndPage()
+        hdc.EndDoc()
+    finally:
+        win32print.ClosePrinter(hprinter)

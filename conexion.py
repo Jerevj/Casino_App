@@ -1,43 +1,36 @@
 import mysql.connector
 from mysql.connector import Error
-from config import DB_HOST,DB_NAME,DB_PASSWORD,DB_USER,PORT
+from config import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, PORT
 
 class Conexion:
-    def __init__(self, usar_pool=False):
-        self.usar_pool = usar_pool
+    def __init__(self):
         self.conexion = None
         self.cursor = None
+        self.conectar()
 
     def conectar(self):
-        """Establece la conexión con la base de datos sin usar pool."""
+        """Establece la conexión con la base de datos."""
         try:
-            self.conexion = mysql.connector.connect(
-                host=DB_HOST,
-                user=DB_USER,
-                password=DB_PASSWORD,
-                database=DB_NAME,
-                port=PORT
-            )
-            self.cursor = self.conexion.cursor()
-            print("Conexión obtenida.")
+            if not self.conexion or not self.conexion.is_connected():
+                self.conexion = mysql.connector.connect(
+                    host=DB_HOST,
+                    user=DB_USER,
+                    password=DB_PASSWORD,
+                    database=DB_NAME,
+                    port=PORT
+                )
+                self.cursor = self.conexion.cursor()
+                print("Conexión obtenida.")
         except Error as e:
             print(f"Error al obtener conexión: {e}")
 
     def desconectar(self):
         """Cierra la conexión con la base de datos."""
-        if self.conexion and self.cursor:
-            try:
-                # Consumir todos los resultados pendientes (si los hay)
-                self.cursor.fetchall()  # Si hay resultados pendientes, los consume
-            except mysql.connector.errors.InterfaceError:
-                # Si no hay resultados pendientes, pasamos
-                pass
-            finally:
-                self.cursor.close()
-                self.conexion.close()
-                self.conexion = None
-                print("Conexión cerrada.")
-
+        if self.cursor:
+            self.cursor.close()
+        if self.conexion:
+            self.conexion.close()
+        print("Conexión cerrada.")
 
     def obtener_persona_por_rut(self, rut):
         """Obtiene una persona por su RUT."""
@@ -45,7 +38,6 @@ class Conexion:
         query = "SELECT * FROM personas WHERE rut = %s"
         self.cursor.execute(query, (rut,))
         result = self.cursor.fetchone()
-        self.desconectar()
         return result
 
     def obtener_persona_por_clave(self, clave):
@@ -54,7 +46,6 @@ class Conexion:
         query = "SELECT * FROM personas WHERE clave = %s"
         self.cursor.execute(query, (clave,))
         result = self.cursor.fetchone()
-        self.desconectar()
         return result
 
     def obtener_menu_por_rut_y_fecha(self, rut, fecha):
@@ -63,7 +54,6 @@ class Conexion:
         query = "SELECT * FROM menus_registrados WHERE rut = %s AND DAY(fecha) = %s"
         self.cursor.execute(query, (rut, fecha))
         result = self.cursor.fetchone()
-        self.desconectar()
         return result
 
     def registrar_boleta(self, rut, menu, nombre_menu, fecha_registro):
@@ -75,10 +65,7 @@ class Conexion:
             ultimo_id = self.cursor.fetchone()[0]
 
             # Si no hay ningún ID registrado, comenzamos con 1
-            if ultimo_id is None:
-                nuevo_id = 1
-            else:
-                nuevo_id = ultimo_id + 1
+            nuevo_id = 1 if ultimo_id is None else ultimo_id + 1
 
             # Insertar la nueva boleta con el ID calculado
             query = """
@@ -97,8 +84,6 @@ class Conexion:
             print(f"Error al registrar boleta: {e}")
             self.conexion.rollback()
             return None
-        finally:
-            self.desconectar()
 
     def obtener_boleta_por_rut_y_fecha(self, rut, fecha):
         """Obtiene una boleta de la base de datos para un rut y fecha específicos."""
@@ -109,5 +94,4 @@ class Conexion:
         """
         self.cursor.execute(query, (rut, fecha.date()))
         boleta = self.cursor.fetchone()
-        self.desconectar()
         return boleta
