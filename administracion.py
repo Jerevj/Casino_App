@@ -2,9 +2,9 @@ from tkinter import *
 from tkinter import ttk
 from container import Container
 
-class Administracion(Tk):
-    def __init__(self, db_connection, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Administracion(Toplevel):
+    def __init__(self, parent, db_connection, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
         self.db_connection = db_connection  # Guardar la conexión
         self.title("Administracion Casino")
         self.geometry("1100x650+120+20")
@@ -29,15 +29,8 @@ class Administracion(Tk):
 
     def on_close(self):
         """Método para manejar el cierre de la ventana de administración."""
-        self.quit()  # Termina el mainloop y cierra la aplicación
+        self.destroy()  # solo cierra la ventana
 
     def show_frame(self, container):
         frame = self.frames[container]
         frame.tkraise()
-
-def main():
-    app = Administracion()
-    app.mainloop()
-
-if __name__ == "__main__":
-    main()

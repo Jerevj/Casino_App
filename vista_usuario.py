@@ -1,3 +1,4 @@
+import re
 import tkinter as tk
 from tkinter import messagebox
 from datetime import datetime
@@ -25,7 +26,7 @@ class VistaUsuario(tk.Frame):
         fuente_grande = ("Arial", 20)
 
         # Etiqueta para la clave
-        tk.Label(self, text="Ingrese su clave:", font=fuente_grande).grid(row=0, column=0, padx=10, pady=10)
+        tk.Label(self, text="Ingrese su clave(o rut): ", font=fuente_grande).grid(row=0, column=0, padx=10, pady=10)
 
         # Campo de entrada para la clave
         self.entry_clave = tk.Entry(self, font=fuente_grande, width=15, show='*')
@@ -69,23 +70,40 @@ class VistaUsuario(tk.Frame):
         """Borra todo el texto en el campo de la clave."""
         self.entry_clave.delete(0, tk.END)
 
-    def validar_clave(self):
-        """Valida la clave de 4 dígitos ingresada."""
-        clave = self.entry_clave.get()
-        if not clave.isdigit() or len(clave) != 4:
-            messagebox.showerror("Error", "La clave debe ser de 4 dígitos numéricos.")
-            return None
-        return clave
+    def validar_clave_o_rut(self):
+        """Valida la clave de 4 dígitos o el RUT ingresado."""
+        entrada = self.entry_clave.get()
+        if entrada.isdigit() and len(entrada) == 4:
+            return 'clave', entrada
+        elif self.validar_rut(entrada):
+            return 'rut', self.formatear_rut(entrada)
+        else:
+            messagebox.showerror("Error", "Ingrese una clave de 4 dígitos o un RUT válido.")
+            return None, None
 
+    def validar_rut(self, rut):
+        """Valida el RUT ingresado sin guiones ni puntos."""
+        rut = rut.replace(".", "").replace("-", "")
+        if len(rut) < 7 or len(rut) > 9:
+            return False
+        return re.match(r"^\d{7,8}[0-9Kk]$", rut) is not None
+
+    def formatear_rut(self, rut):
+        """Formatea el RUT ingresado sin guiones ni puntos."""
+        rut = rut.replace(".", "").replace("-", "")
+        cuerpo = rut[:-1]
+        dv = rut[-1]
+        return f"{cuerpo}-{dv}"
+    
     def obtener_almuerzo(self):
-        """Obtiene el almuerzo del usuario según su clave."""
-        clave = self.validar_clave()
-        if not clave:
-            self.boton_generar.config(state="normal")  # Habilitar el botón si la clave no es válida
-            self.limpiar_campo_clave()  # Limpiar el campo de clave para el siguiente usuario
+        """Obtiene el almuerzo del usuario según su clave o RUT."""
+        tipo, entrada = self.validar_clave_o_rut()
+        if not entrada:
+            self.boton_generar.config(state="normal")  # Habilitar el botón si la entrada no es válida
+            self.limpiar_campo_clave()  # Limpiar el campo de entrada para el siguiente usuario
             return
 
-        # Limpiar el campo de clave antes de cualquier operación
+        # Limpiar el campo de entrada antes de cualquier operación
         self.limpiar_campo_clave()
 
         # Obtener la fecha actual
@@ -94,7 +112,11 @@ class VistaUsuario(tk.Frame):
 
         try:
             # Buscar la persona en la base de datos
-            persona = self.db_connection.obtener_persona_por_clave(clave)
+            if tipo == 'clave':
+                persona = self.db_connection.obtener_persona_por_clave(entrada)
+            else:
+                persona = self.db_connection.obtener_persona_por_rut(entrada)
+
             if persona:
                 rut = persona[0]
                 nombre_completo = persona[1]
@@ -137,7 +159,7 @@ class VistaUsuario(tk.Frame):
                     messagebox.showerror("Error", "No se encontró el nombre del menú.")
                     self.boton_generar.config(state="normal")  # Habilitar el botón
             else:
-                messagebox.showerror("Error", "Clave no encontrada.")
+                messagebox.showerror("Error", "Clave o RUT no encontrado.")
                 self.boton_generar.config(state="normal")  # Habilitar el botón
         
         except Exception as e:
@@ -157,13 +179,5 @@ class VistaUsuario(tk.Frame):
         self.entry_clave.focus_set()  # Enfocar el campo de clave nuevamente
 
     def cerrar_ventana(self):
-        """Cierra la conexión antes de cerrar la ventana."""
-        self.ventana_abierta = False  # Marca que la ventana está cerrada
-        print("Cerrando la ventana...")
-        self.db_connection.desconectar()
+        """Cierra la ventana sin cerrar la conexión a la base de datos."""
         self.master.destroy()
-
-    def __del__(self):
-        """Asegurarse de que la conexión se cierre si no se llama a cerrar_ventana explícitamente."""
-        self.db_connection.desconectar()
-        print("Base de datos desconectada")

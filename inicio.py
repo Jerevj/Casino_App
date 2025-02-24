@@ -13,6 +13,9 @@ class Inicio(tk.Tk):
         self.resizable(True, True)
         self.config(bg="lightblue")
 
+        # Inicializar la variable para evitar múltiples cierres
+        self.cerrando = False
+        
         # Título
         titulo = tk.Label(self, text="Seleccione el modo de operación", font=("Arial", 14, "bold"), bg="lightblue")
         titulo.pack(pady=20)
@@ -25,16 +28,19 @@ class Inicio(tk.Tk):
         self.btn_admin = tk.Button(self, text="Modo Administrador", font=("Arial", 12), command=self.modo_administrador, width=20)
         self.btn_admin.pack(pady=10)
 
-        # Variable para controlar si la ventana de modo usuario está abierta
+        # Variables para controlar si las ventanas están abiertas
         self.ventana_usuario_abierta = False
+        self.ventana_admin_abierta = False
 
         # Manejo del cierre de la ventana principal
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def on_close(self):
         """Método para manejar el cierre de la ventana principal."""
-        self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
-        self.quit()  # Termina el mainloop y cierra la aplicación
+        if not self.cerrando:
+            self.cerrando = True
+            self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
+            self.quit()  # Termina el mainloop y cierra la aplicación
 
     def modo_usuario(self):
         """Lógica para abrir el modo usuario (panel numérico)."""
@@ -46,15 +52,25 @@ class Inicio(tk.Tk):
             vista_usuario = VistaUsuario(nueva_ventana, self, self.db_connection)  # Pasa la nueva ventana, el controlador (self) y la conexión
             vista_usuario.pack(fill="both", expand=True)  # Empaqueta el frame
 
-            nueva_ventana.protocol("WM_DELETE_WINDOW", self.on_close_usuario)  # Controlar el cierre de la ventana
-            nueva_ventana.mainloop()
+            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.on_close_usuario(nueva_ventana))  # Controlar el cierre de la ventana
 
-    def on_close_usuario(self):
+    def on_close_usuario(self, ventana):
         """Método para manejar el cierre de la ventana usuario."""
+        ventana.destroy()  # Destruye la ventana
         self.ventana_usuario_abierta = False  # Marca que la ventana ya se ha cerrado
         self.btn_usuario.config(state="normal")  # Habilita el botón nuevamente
 
     def modo_administrador(self):
         """Lógica para abrir el modo administrador."""
-        login = Login(self, self.db_connection)  # Pasar la conexión al login
-        login.grab_set()  # Bloquea la ventana principal hasta que se cierre la ventana de login
+        if not self.ventana_admin_abierta:
+            self.ventana_admin_abierta = True  # Marca que la ventana está abierta
+            self.btn_admin.config(state="disabled")  # Deshabilita el botón mientras la ventana está abierta
+
+            nueva_ventana = Login(self, self.db_connection)  # Crea una nueva ventana de login
+            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.on_close_admin(nueva_ventana))  # Controlar el cierre de la ventana
+
+    def on_close_admin(self, ventana):
+        """Método para manejar el cierre de la ventana administrador."""
+        ventana.destroy()  # Destruye la ventana
+        self.ventana_admin_abierta = False  # Marca que la ventana ya se ha cerrado
+        self.btn_admin.config(state="normal")  # Habilita el botón nuevamente
