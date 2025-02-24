@@ -15,7 +15,7 @@ class Inicio(tk.Tk):
 
         # Inicializar la variable para evitar múltiples cierres
         self.cerrando = False
-        
+
         # Título
         titulo = tk.Label(self, text="Seleccione el modo de operación", font=("Arial", 14, "bold"), bg="lightblue")
         titulo.pack(pady=20)
@@ -39,8 +39,12 @@ class Inicio(tk.Tk):
         """Método para manejar el cierre de la ventana principal."""
         if not self.cerrando:
             self.cerrando = True
-            self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
-            self.quit()  # Termina el mainloop y cierra la aplicación
+            try:
+                self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
+            except Exception as e:
+                print(f"Error al desconectar la base de datos: {e}")
+            finally:
+                self.destroy()  # Destruye la ventana principal y termina el ciclo de eventos
 
     def modo_usuario(self):
         """Lógica para abrir el modo usuario (panel numérico)."""
