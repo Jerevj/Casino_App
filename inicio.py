@@ -39,12 +39,18 @@ class Inicio(tk.Tk):
         """Método para manejar el cierre de la ventana principal."""
         if not self.cerrando:
             self.cerrando = True
+            print("Cerrando la aplicación...")
             try:
-                self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
+                if self.db_connection.conexion:
+                    print("Desconectando la base de datos...")
+                    self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
+                    print("Base de datos desconectada.")
             except Exception as e:
                 print(f"Error al desconectar la base de datos: {e}")
             finally:
+                print("Destruyendo la ventana principal...")
                 self.destroy()  # Destruye la ventana principal y termina el ciclo de eventos
+                print("Ventana principal destruida.")
 
     def modo_usuario(self):
         """Lógica para abrir el modo usuario (panel numérico)."""
@@ -77,4 +83,8 @@ class Inicio(tk.Tk):
         """Método para manejar el cierre de la ventana administrador."""
         ventana.destroy()  # Destruye la ventana
         self.ventana_admin_abierta = False  # Marca que la ventana ya se ha cerrado
-        self.btn_admin.config(state="normal")  # Habilita el botón nuevamente
+        try:
+            if self.winfo_exists() and self.btn_admin.winfo_exists():
+                self.btn_admin.config(state="normal")  # Habilita el botón nuevamente
+        except tk.TclError:
+            pass  # Ignorar el error si la ventana principal ya ha sido destruida

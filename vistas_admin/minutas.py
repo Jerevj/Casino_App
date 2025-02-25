@@ -10,7 +10,7 @@ class Minutas(tk.Frame):
         self.data = []
         self.column_names = ['Día', 'Menú A', 'Menú B', 'Menú C']
         self.widgets()
-        # Eliminar la llamada a cargar_minutas desde aquí
+        self.cargar_minutas()  # Llamar a cargar_minutas aquí
 
     def widgets(self):
         titulo = tk.Label(self, text="Gestión de Menús seleccionados", font=("Arial", 20, "bold"))
@@ -79,6 +79,10 @@ class Minutas(tk.Frame):
             if not rows:
                 raise Exception("El archivo está vacío o mal estructurado.")
 
+            # Validar que el archivo tenga al menos 33 columnas
+            if len(rows[0]) < 33:
+                raise Exception("El archivo Excel no tiene el formato esperado. Asegúrate de que tenga al menos 33 columnas.")
+
             self.data = []
             self.column_names = rows[0]
 
@@ -115,6 +119,7 @@ class Minutas(tk.Frame):
         except Exception as e:
             messagebox.showerror("Error", f"Error al cargar las minutas desde el archivo: {e}")       
         
+
     def editar_celda(self, event):
         item = self.tree.identify_row(event.y)
         column = self.tree.identify_column(event.x)

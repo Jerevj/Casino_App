@@ -12,9 +12,15 @@ def main():
     app.mainloop()
 
     # Desconectar la base de datos al cerrar la aplicación
-    '''if db_connection.conexion:
-        db_connection.desconectar()'''
-    #ya se desconecta en el on_close de inicio.py
-    
+    if db_connection.conexion:
+        print("Desconectando la base de datos desde index.py...")
+        db_connection.desconectar()
+        print("Base de datos desconectada desde index.py.")
+
+    # Forzar el cierre de la aplicación
+    print("Forzando el cierre de la aplicación...")
+    app.quit()
+    print("Aplicación cerrada.")
+
 if __name__ == "__main__":
     main()

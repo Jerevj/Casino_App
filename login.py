@@ -46,7 +46,7 @@ class Login(tk.Toplevel):
             if resultado and bcrypt.checkpw(clave.encode('utf-8'), resultado[0].encode('utf-8')):
                 messagebox.showinfo("Éxito", f"Bienvenido, {resultado[1]}")  # Mostrar nombre del usuario
                 self.destroy()  # Cerrar ventana de login
-                app = Administracion(self.master, self.db_connection)  # Pasar la conexión a la administración
+                app = Administracion(self.db_connection)  # Pasar la conexión a la administración
                 app.protocol("WM_DELETE_WINDOW", lambda: self.master.on_close_admin(app))  # Controlar el cierre de la ventana de administración
                 app.mainloop()  # Ejecutar la aplicación
             else:

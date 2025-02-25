@@ -14,16 +14,20 @@ class Extra(tk.Frame):
         self.widgets()
 
     def widgets(self):
+        # Crear un Frame para centrar los elementos
+        frame_central = tk.Frame(self)
+        frame_central.pack(expand=True)
+
         # Título de la ventana
-        mensaje = tk.Label(self, text="¡Ventana Extra cargada correctamente!", font=("Arial", 16))
+        mensaje = tk.Label(frame_central, text="Acciones Extra", font=("Arial", 16))
         mensaje.grid(row=0, column=0, pady=20)
 
         # Botón para mostrar el Excel ordenado
-        btn_mostrar_excel = tk.Button(self, text="Mostrar Menú Actual", command=self.mostrar_menus, font=("Arial", 12))
+        btn_mostrar_excel = tk.Button(frame_central, text="Mostrar Menú Actual", command=self.mostrar_menus, font=("Arial", 12))
         btn_mostrar_excel.grid(row=1, column=0, pady=10)
 
         # Botón para agregar un nuevo usuario
-        btn_agregar_usuario = tk.Button(self, text="Agregar Nuevo Usuario", command=self.agregar_usuario, font=("Arial", 12))
+        btn_agregar_usuario = tk.Button(frame_central, text="Agregar Nuevo Usuario", command=self.agregar_usuario, font=("Arial", 12))
         btn_agregar_usuario.grid(row=2, column=0, pady=10)
 
     def mostrar_menus(self):
@@ -34,7 +38,8 @@ class Extra(tk.Frame):
             return
 
         try:
-            # Cargar el archivo de Excel usando ExcelManager
+            # Recargar el archivo de Excel antes de acceder a él
+            excel_manager.recargar_archivos()
             menus_ws = excel_manager.menus_ws
             if menus_ws is None:
                 raise Exception("No se pudo cargar el archivo 'Menus_Actual.xlsx'.")
@@ -64,7 +69,7 @@ class Extra(tk.Frame):
 
             # Crear el Treeview para mostrar los menús
             tree = ttk.Treeview(ventana_menus, columns=("Fecha", "Menú A", "Menú B", "Menú C"), show="headings", height=15)
-            tree.grid(padx=20, pady=20, fill=tk.BOTH, expand=True)
+            tree.pack(padx=20, pady=20, fill=tk.BOTH, expand=True)
 
             # Configurar las columnas
             tree.heading("Fecha", text="Fecha (año/mes/dia)", anchor=tk.W)
@@ -88,7 +93,7 @@ class Extra(tk.Frame):
 
             # Añadir un botón para cerrar la ventana de la tabla
             btn_cerrar = tk.Button(ventana_menus, text="Cerrar", command=ventana_menus.destroy, font=("Arial", 12))
-            btn_cerrar.grid(row=0, column=0, pady=10)
+            btn_cerrar.pack(pady=10)
 
             # Guardamos la referencia de la ventana abierta
             self.menus_ventana_abierta = ventana_menus

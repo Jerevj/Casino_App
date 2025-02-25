@@ -1,4 +1,3 @@
-# Clase ExcelManager
 import os
 from openpyxl import load_workbook
 from tkinter import messagebox
@@ -6,14 +5,6 @@ from config import MINUTA_FILE_PATH, MENUS_FILE_PATH
 
 class ExcelManager:
     def __init__(self):
-        if not os.path.exists(MINUTA_FILE_PATH):
-            messagebox.showerror("Error", f"No se encontró el archivo: {MINUTA_FILE_PATH}")
-            return
-
-        if not os.path.exists(MENUS_FILE_PATH):
-            messagebox.showerror("Error", f"No se encontró el archivo: {MENUS_FILE_PATH}")
-            return
-
         self.minuta_file_path = MINUTA_FILE_PATH
         self.menus_file_path = MENUS_FILE_PATH
         self.minuta_wb = None
@@ -25,15 +16,24 @@ class ExcelManager:
     def cargar_archivos(self):
         """Carga los archivos de Excel usando openpyxl."""
         try:
-            self.minuta_wb = load_workbook(self.minuta_file_path)
-            self.minuta_ws = self.minuta_wb.active  # Asumimos que los datos están en la primera hoja
+            if os.path.exists(self.minuta_file_path):
+                self.minuta_wb = load_workbook(self.minuta_file_path)
+                self.minuta_ws = self.minuta_wb.active  # Asumimos que los datos están en la primera hoja
+            else:
+                print(f"No se encontró el archivo: {self.minuta_file_path}")
+                self.minuta_ws = None  # Asegurar que no haya una referencia incorrecta
         except Exception as e:
             print(f"Error al cargar 'Minuta_Actual.xlsx': {e}")
             messagebox.showerror("Error", "No se pudo cargar el archivo 'Minuta_Actual.xlsx'.")
-            self.minuta_w
+            self.minuta_ws = None  # Asegurar que no haya una referencia incorrecta
+
         try:
-            self.menus_wb = load_workbook(self.menus_file_path)
-            self.menus_ws = self.menus_wb.active  # Cargar la hoja de 'Menus_Actual.xlsx'
+            if os.path.exists(self.menus_file_path):
+                self.menus_wb = load_workbook(self.menus_file_path)
+                self.menus_ws = self.menus_wb.active  # Cargar la hoja de 'Menus_Actual.xlsx'
+            else:
+                print(f"No se encontró el archivo: {self.menus_file_path}")
+                self.menus_ws = None  # Asegurar que no haya una referencia incorrecta
         except Exception as e:
             print(f"Error al cargar 'Menus_Actual.xlsx': {e}")
             messagebox.showerror("Error", "No se pudo cargar el archivo 'Menus_Actual.xlsx'.")
@@ -42,8 +42,10 @@ class ExcelManager:
     def recargar_archivos(self):
         """Recarga los archivos de Excel para reflejar los cambios."""
         self.cargar_archivos()
+
     def obtener_menu_desde_excel(self, rut, dia):
         """Obtiene la opción de menú (A, B, C) de un empleado según el RUT y el día del mes desde 'Minuta_Actual.xlsx'."""
+        self.recargar_archivos()  # Recargar los archivos antes de acceder a ellos
         if self.minuta_ws is None:
             print("El archivo 'Minuta_Actual.xlsx' no está cargado correctamente.")
             return None
@@ -66,6 +68,7 @@ class ExcelManager:
 
     def obtener_nombre_menu(self, dia, opcion_menu):
         """Obtiene el nombre del menú a partir de la opción (A, B o C) desde 'Menus_Actual.xlsx'."""
+        self.recargar_archivos()  # Recargar los archivos antes de acceder a ellos
         if self.menus_ws is None:
             print("El archivo 'Menus_Actual.xlsx' no está cargado correctamente.")
             return None
@@ -112,6 +115,7 @@ class ExcelManager:
 
     def obtener_minuta_sheet(self):
         """Devuelve la hoja activa del archivo 'Minuta_Actual.xlsx' si está cargado correctamente."""
+        self.recargar_archivos()  # Recargar los archivos antes de acceder a ellos
         if self.minuta_ws is None:
             messagebox.showerror("Error", "No se pudo obtener la hoja de Minuta_Actual.xlsx. Asegúrate de que el archivo existe y está bien estructurado.")
             return None

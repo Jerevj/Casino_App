@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import datetime
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -70,10 +70,10 @@ class Informes(tk.Frame):
         self.frame_grafico.grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
 
         # Botones para exportar
-        self.boton_exportar_excel = tk.Button(self.frame_filtros, text="Exportar a Excel", command=self.exportar_a_excel)
+        self.boton_exportar_excel = tk.Button(self.frame_filtros, text="Exportar a Excel", bg="green", command=self.exportar_a_excel)
         self.boton_exportar_excel.grid(row=0, column=7, padx=5)
 
-        self.boton_exportar_pdf = tk.Button(self.frame_filtros, text="Exportar a PDF", command=self.exportar_a_pdf)
+        self.boton_exportar_pdf = tk.Button(self.frame_filtros, text="Exportar a PDF", bg="red", command=self.exportar_a_pdf)
         self.boton_exportar_pdf.grid(row=0, column=8, padx=5)
 
     def cargar_datos(self, anio=None, mes=None, dia=None):
@@ -172,8 +172,9 @@ class Informes(tk.Frame):
 
                 writer.close()  # Usar close() en lugar de save()
                 print(f"Datos exportados a Excel: {archivo}")
+                messagebox.showinfo("Exportación Exitosa", f"Datos exportados a Excel: {archivo}")
             else:
-                print("No hay datos para exportar.")
+                messagebox.showwarning("Sin Datos", "No hay datos para exportar.")
 
     def exportar_a_pdf(self):
         archivo = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
@@ -231,5 +232,6 @@ class Informes(tk.Frame):
                 # Eliminar la imagen del gráfico
                 os.remove(grafico_img)
                 print(f"Datos exportados a PDF: {archivo}")
+                messagebox.showinfo("Exportación Exitosa", f"Datos exportados a PDF: {archivo}")
             else:
-                print("No hay datos para exportar.")
+                messagebox.showwarning("Sin Datos", "No hay datos para exportar.")

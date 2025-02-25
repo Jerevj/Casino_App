@@ -3,18 +3,18 @@ import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from datetime import datetime
-from utils.excel_utils import ExcelManager
-from config import MINUTA_FILE_PATH, MENUS_FILE_PATH, BACKUP_FOLDER
+import pandas as pd
+from utils.excel_utils import excel_manager
 
 class Subir(tk.Frame):
-    def __init__(self, padre, db_connection):
-        super().__init__(padre)
+    def __init__(self, parent, db_connection):
+        super().__init__(parent)
         self.db_connection = db_connection  # Guardar la conexión
         self.minuta_file_path = None
         self.menus_file_path = None
-        self.current_minuta_file = MINUTA_FILE_PATH
-        self.current_menus_file = MENUS_FILE_PATH
-        self.backup_folder = BACKUP_FOLDER
+        self.current_minuta_file = excel_manager.obtener_ruta_minuta()
+        self.current_menus_file = excel_manager.obtener_ruta_menus()
+        self.backup_folder = "backups"
         self.widgets()
 
     def widgets(self):
@@ -50,36 +50,46 @@ class Subir(tk.Frame):
         self.label_archivos.grid(row=4, column=0, columnspan=2, pady=15)
 
     def seleccionar_archivo_minuta(self):
+        """Selecciona el archivo de Minuta y actualiza la ruta."""
         file_path = filedialog.askopenfilename(title="Seleccionar archivo Minuta", filetypes=[("Archivos de Excel", "*.xlsx *.xls")])
         if file_path:
             self.minuta_file_path = file_path
         self.actualizar_label_archivos()
 
     def seleccionar_archivo_menus(self):
+        """Selecciona el archivo de Menús y actualiza la ruta."""
         file_path = filedialog.askopenfilename(title="Seleccionar archivo Menús", filetypes=[("Archivos de Excel", "*.xlsx *.xls")])
         if file_path:
             self.menus_file_path = file_path
         self.actualizar_label_archivos()
 
     def actualizar_label_archivos(self):
+        """Actualiza la etiqueta de estado con las rutas de los archivos seleccionados."""
         minuta_text = f"Minuta: {self.minuta_file_path}" if self.minuta_file_path else "Minuta no seleccionada"
         menus_text = f"Menús: {self.menus_file_path}" if self.menus_file_path else "Menús no seleccionado"
         self.label_archivos.config(text=f"{minuta_text}\n{menus_text}", fg="black")
 
     def cargar_minuta(self):
+        """Carga el archivo de Minuta seleccionado."""
         if not self.minuta_file_path:
             messagebox.showwarning("Advertencia", "Por favor, selecciona un archivo de Minuta antes de subirlo.")
             return
         self.procesar_archivo(self.minuta_file_path, self.current_minuta_file, "minuta")
 
     def cargar_menus(self):
+        """Carga el archivo de Menús seleccionado."""
         if not self.menus_file_path:
             messagebox.showwarning("Advertencia", "Por favor, selecciona un archivo de Menús antes de subirlo.")
             return
         self.procesar_archivo(self.menus_file_path, self.current_menus_file, "menus")
 
     def procesar_archivo(self, nuevo_archivo, archivo_actual, tipo):
+        """Procesa el archivo seleccionado, realiza el respaldo y lo carga."""
         try:
+            # Convertir archivo .xls a .xlsx si es necesario
+            if nuevo_archivo.endswith('.xls'):
+                nuevo_archivo = self.convertir_xls_a_xlsx(nuevo_archivo)
+
             os.makedirs(self.backup_folder, exist_ok=True)
             if os.path.exists(archivo_actual):
                 backup_path = os.path.join(self.backup_folder, f"{tipo}_{self.obtener_mes_actual()}.xlsx")
@@ -88,19 +98,38 @@ class Subir(tk.Frame):
             shutil.copy(nuevo_archivo, archivo_actual)
             messagebox.showinfo("Éxito", f"El archivo {tipo} se ha cargado correctamente.")
             
-            excel_manager = ExcelManager()
+            # Actualizar las rutas en ExcelManager
+            if tipo == "minuta":
+                excel_manager.minuta_file_path = archivo_actual
+            elif tipo == "menus":
+                excel_manager.menus_file_path = archivo_actual
+
             excel_manager.cargar_archivos()
             self.label_archivos.config(text=f"Archivo {tipo} cargado con éxito.", fg="green")
         except Exception as e:
             messagebox.showerror("Error", f"Hubo un problema al cargar el archivo {tipo}:\n{e}")
 
+    def convertir_xls_a_xlsx(self, ruta_xls):
+        """Convierte un archivo .xls a .xlsx y devuelve la nueva ruta."""
+        try:
+            df = pd.read_excel(ruta_xls, engine='xlrd')
+            ruta_xlsx = ruta_xls.replace('.xls', '.xlsx')
+            df.to_excel(ruta_xlsx, index=False, engine='openpyxl')
+            return ruta_xlsx
+        except Exception as e:
+            messagebox.showerror("Error", f"Hubo un problema al convertir el archivo {ruta_xls} a .xlsx:\n{e}")
+            return ruta_xls
+
     def guardar_respaldo_minuta(self):
+        """Guarda un respaldo del archivo de Minuta."""
         self.guardar_respaldo(self.current_minuta_file, "Minuta")
 
     def guardar_respaldo_menus(self):
+        """Guarda un respaldo del archivo de Menús."""
         self.guardar_respaldo(self.current_menus_file, "Menús")
 
     def guardar_respaldo(self, archivo_actual, tipo):
+        """Guarda un respaldo del archivo especificado."""
         file_path = filedialog.asksaveasfilename(title=f"Guardar Respaldo {tipo}", defaultextension=".xlsx", filetypes=[("Archivos de Excel", "*.xlsx *.xls")])
         if file_path:
             try:
@@ -111,6 +140,7 @@ class Subir(tk.Frame):
                 messagebox.showerror("Error", f"Hubo un problema al guardar el respaldo de {tipo}:\n{e}")
 
     def obtener_mes_actual(self):
+        """Obtiene el nombre del mes actual."""
         now = datetime.now()
         meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
         return meses[now.month - 1]
