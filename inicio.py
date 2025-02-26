@@ -29,62 +29,58 @@ class Inicio(tk.Tk):
         self.btn_admin.pack(pady=10)
 
         # Variables para controlar si las ventanas están abiertas
-        self.ventana_usuario_abierta = False
-        self.ventana_admin_abierta = False
+        self.ventanas_abiertas = []  # Lista para rastrear ventanas secundarias
 
         # Manejo del cierre de la ventana principal
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
     def on_close(self):
-        """Método para manejar el cierre de la ventana principal."""
+        """Método para manejar el cierre de la ventana principal y asegurarse de que todo se cierra bien."""
         if not self.cerrando:
-            self.cerrando = True
+            self.cerrando = True  # Evita múltiples ejecuciones de este método
             print("Cerrando la aplicación...")
+
+            # Cerrar todas las ventanas abiertas antes de salir
+            for ventana in self.ventanas_abiertas:
+                if ventana.winfo_exists():
+                    ventana.destroy()
+
+            # Intentar desconectar la base de datos
             try:
                 if self.db_connection.conexion:
                     print("Desconectando la base de datos...")
-                    self.db_connection.desconectar()  # Desconectar la base de datos al cerrar la aplicación
+                    self.db_connection.desconectar()
                     print("Base de datos desconectada.")
             except Exception as e:
                 print(f"Error al desconectar la base de datos: {e}")
-            finally:
-                print("Destruyendo la ventana principal...")
-                self.destroy()  # Destruye la ventana principal y termina el ciclo de eventos
-                print("Ventana principal destruida.")
+
+            # Cerrar la ventana principal y detener el bucle de eventos
+            self.destroy()
+            print("Ventana principal destruida.")
+            self.quit()  # Detiene el bucle de eventos de Tkinter
+            print("Aplicación cerrada completamente.")
 
     def modo_usuario(self):
         """Lógica para abrir el modo usuario (panel numérico)."""
-        if not self.ventana_usuario_abierta:
-            self.ventana_usuario_abierta = True  # Marca que la ventana está abierta
-            self.btn_usuario.config(state="disabled")  # Deshabilita el botón mientras la ventana está abierta
+        if not any(isinstance(v, VistaUsuario) for v in self.ventanas_abiertas):
+            nueva_ventana = tk.Toplevel(self)
+            vista_usuario = VistaUsuario(nueva_ventana, self, self.db_connection)
+            vista_usuario.pack(fill="both", expand=True)
 
-            nueva_ventana = tk.Toplevel(self)  # Crea una nueva ventana secundaria
-            vista_usuario = VistaUsuario(nueva_ventana, self, self.db_connection)  # Pasa la nueva ventana, el controlador (self) y la conexión
-            vista_usuario.pack(fill="both", expand=True)  # Empaqueta el frame
+            self.ventanas_abiertas.append(nueva_ventana)  # Agregar a la lista
 
-            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.on_close_usuario(nueva_ventana))  # Controlar el cierre de la ventana
-
-    def on_close_usuario(self, ventana):
-        """Método para manejar el cierre de la ventana usuario."""
-        ventana.destroy()  # Destruye la ventana
-        self.ventana_usuario_abierta = False  # Marca que la ventana ya se ha cerrado
-        self.btn_usuario.config(state="normal")  # Habilita el botón nuevamente
+            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(nueva_ventana))
 
     def modo_administrador(self):
         """Lógica para abrir el modo administrador."""
-        if not self.ventana_admin_abierta:
-            self.ventana_admin_abierta = True  # Marca que la ventana está abierta
-            self.btn_admin.config(state="disabled")  # Deshabilita el botón mientras la ventana está abierta
+        if not any(isinstance(v, Login) for v in self.ventanas_abiertas):
+            nueva_ventana = Login(self, self.db_connection)
+            self.ventanas_abiertas.append(nueva_ventana)
 
-            nueva_ventana = Login(self, self.db_connection)  # Crea una nueva ventana de login
-            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.on_close_admin(nueva_ventana))  # Controlar el cierre de la ventana
+            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(nueva_ventana))
 
-    def on_close_admin(self, ventana):
-        """Método para manejar el cierre de la ventana administrador."""
-        ventana.destroy()  # Destruye la ventana
-        self.ventana_admin_abierta = False  # Marca que la ventana ya se ha cerrado
-        try:
-            if self.winfo_exists() and self.btn_admin.winfo_exists():
-                self.btn_admin.config(state="normal")  # Habilita el botón nuevamente
-        except tk.TclError:
-            pass  # Ignorar el error si la ventana principal ya ha sido destruida
+    def cerrar_ventana(self, ventana):
+        """Método para manejar el cierre de cualquier ventana secundaria."""
+        if ventana in self.ventanas_abiertas:
+            self.ventanas_abiertas.remove(ventana)
+        ventana.destroy()

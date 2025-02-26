@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import bcrypt
-import mysql
+import mysql.connector
 from administracion import Administracion
 
 class Login(tk.Toplevel):
@@ -26,6 +26,9 @@ class Login(tk.Toplevel):
         btn_login = tk.Button(self, text="Ingresar", font=("Arial", 12), command=self.verificar_login)
         btn_login.pack(pady=10)
 
+        # Asegurarse de que el cierre de la ventana no cause errores
+        self.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
+
     def verificar_login(self):
         """Verifica si el usuario y la clave coinciden en la base de datos."""
         usuario = self.entry_usuario.get()
@@ -38,7 +41,7 @@ class Login(tk.Toplevel):
 
         try:
             # Usar la conexión pasada desde inicio.py
-            cursor = self.db_connection.cursor
+            cursor = self.db_connection.cursor  # No usar paréntesis aquí
             cursor.execute("SELECT clave, usuario FROM usuarios WHERE usuario = %s", (usuario,))
             resultado = cursor.fetchone()
 
@@ -46,15 +49,19 @@ class Login(tk.Toplevel):
             if resultado and bcrypt.checkpw(clave.encode('utf-8'), resultado[0].encode('utf-8')):
                 messagebox.showinfo("Éxito", f"Bienvenido, {resultado[1]}")  # Mostrar nombre del usuario
                 self.destroy()  # Cerrar ventana de login
+
+                # Abrir la ventana de administración
                 app = Administracion(self.db_connection)  # Pasar la conexión a la administración
-                app.protocol("WM_DELETE_WINDOW", lambda: self.master.on_close_admin(app))  # Controlar el cierre de la ventana de administración
-                app.mainloop()  # Ejecutar la aplicación
+                app.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(app))  # Controlar el cierre de la ventana de administración
+                app.deiconify()  # Mostrar la ventana de administración
             else:
                 messagebox.showerror("Error", "Usuario o contraseña incorrectos")
         
         except mysql.connector.Error as err:
             messagebox.showerror("Error de Conexión", f"No se pudo conectar a la base de datos: {err}")
-    
-    def cerrar_ventana(self):
+
+    def cerrar_ventana(self, app=None):
         """Cierra la ventana sin cerrar la conexión a la base de datos."""
-        self.master.destroy()
+        if app:
+            app.destroy()  # Cerrar la ventana de administración si está abierta
+        self.destroy()  # Cerrar la ventana de login

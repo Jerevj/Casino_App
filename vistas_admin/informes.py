@@ -22,7 +22,9 @@ class Informes(tk.Frame):
         )
 
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        self.canvas.pack(fill="both", expand=True)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+
+        self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
         self.datos = []  # Variable de instancia para almacenar los datos
@@ -139,42 +141,43 @@ class Informes(tk.Frame):
         self.cargar_datos(anio, mes, dia)
 
     def exportar_a_excel(self):
-        archivo = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
-        if archivo:
-            if self.datos:  # Utilizar los datos almacenados
-                df = pd.DataFrame(self.datos, columns=["RUT", "Fecha", "Menú"])
-                writer = pd.ExcelWriter(archivo, engine='xlsxwriter')
-                df.to_excel(writer, index=False, sheet_name='Informe')
+        try:
+            archivo = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+            if archivo:
+                if self.datos:
+                    df = pd.DataFrame(self.datos, columns=["RUT", "Fecha", "Menú"])
+                    with pd.ExcelWriter(archivo, engine='xlsxwriter') as writer:
+                        df.to_excel(writer, index=False, sheet_name='Informe')
 
-                # Ajustar el ancho de las columnas
-                workbook = writer.book
-                worksheet = writer.sheets['Informe']
-                for idx, col in enumerate(df):
-                    max_len = df[col].astype(str).map(len).max()
-                    worksheet.set_column(idx, idx, max_len + 2)
+                        # Ajustar el ancho de las columnas
+                        workbook = writer.book
+                        worksheet = writer.sheets['Informe']
+                        for idx, col in enumerate(df):
+                            max_len = df[col].astype(str).map(len).max()
+                            worksheet.set_column(idx, idx, max_len + 2)
 
-                # Crear una tabla con las cantidades de cada menú
-                conteo_menus = {"A": 0, "B": 0, "C": 0}
-                for dato in self.datos:
-                    menu = dato[2]
-                    if menu in conteo_menus:
-                        conteo_menus[menu] += 1
+                        # Crear una tabla con las cantidades de cada menú
+                        conteo_menus = {"A": 0, "B": 0, "C": 0}
+                        for dato in self.datos:
+                            menu = dato[2]
+                            if menu in conteo_menus:
+                                conteo_menus[menu] += 1
 
-                # Escribir la tabla de cantidades a la derecha de la otra tabla
-                start_col = len(df.columns) + 2  # Dejar dos columnas de espacio
-                worksheet.write(0, start_col, "Menú")
-                worksheet.write(0, start_col + 1, "Cantidad")
-                row = 1
-                for menu, cantidad in conteo_menus.items():
-                    worksheet.write(row, start_col, menu)
-                    worksheet.write(row, start_col + 1, cantidad)
-                    row += 1
+                        # Escribir la tabla de cantidades a la derecha de la otra tabla
+                        start_col = len(df.columns) + 2  # Dejar dos columnas de espacio
+                        worksheet.write(0, start_col, "Menú")
+                        worksheet.write(0, start_col + 1, "Cantidad")
+                        row = 1
+                        for menu, cantidad in conteo_menus.items():
+                            worksheet.write(row, start_col, menu)
+                            worksheet.write(row, start_col + 1, cantidad)
+                            row += 1
 
-                writer.close()  # Usar close() en lugar de save()
-                print(f"Datos exportados a Excel: {archivo}")
-                messagebox.showinfo("Exportación Exitosa", f"Datos exportados a Excel: {archivo}")
-            else:
-                messagebox.showwarning("Sin Datos", "No hay datos para exportar.")
+                    messagebox.showinfo("Exportación Exitosa", f"Datos exportados a Excel: {archivo}")
+                else:
+                    messagebox.showwarning("Sin Datos", "No hay datos para exportar.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Ocurrió un error al exportar a Excel: {str(e)}")
 
     def exportar_a_pdf(self):
         archivo = filedialog.asksaveasfilename(defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")])
@@ -221,6 +224,7 @@ class Informes(tk.Frame):
                 # Guardar gráfico como imagen
                 grafico_img = "grafico.png"
                 fig.savefig(grafico_img)
+                plt.close(fig)  # Cerrar la figura para liberar recursos
 
                 # Insertar la imagen del gráfico en el PDF
                 pdf.ln(10)

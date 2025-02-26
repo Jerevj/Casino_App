@@ -11,7 +11,7 @@ class MenusInscritos(tk.Frame):
         self.widgets()
         
         # Asegurar cierre de conexión al cerrar la ventana
-        self.winfo_toplevel().protocol("WM_DELETE_WINDOW", self.cerrar_conexion)
+        #self.winfo_toplevel().protocol("WM_DELETE_WINDOW", self.cerrar_conexion)
 
     def widgets(self):
         frame_tree = tk.Frame(self)
@@ -162,11 +162,11 @@ class MenusInscritos(tk.Frame):
             messagebox.showerror("Error", f"No se pudo actualizar el estado.\n{e}")
             print(traceback.format_exc())
 
-    def cerrar_conexion(self):
+    '''def cerrar_conexion(self):
         """Cierra la conexión a la base de datos al salir"""
         try:
             self.db_connection.desconectar()
         except Exception as e:
             print(f"Error al cerrar la conexión: {e}")
         finally:
-            self.winfo_toplevel().destroy()
+            self.winfo_toplevel().destroy()'''

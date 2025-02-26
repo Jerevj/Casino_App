@@ -16,7 +16,7 @@ class VistaUsuario(tk.Frame):
         self.widgets()
 
         # Manejar el cierre de la ventana
-        self.master.protocol("WM_DELETE_WINDOW", self.cerrar_ventana)
+        self.master.protocol("WM_DELETE_WINDOW", self.cerrar_ventana_usuario)
 
         self.boleta_generada = False  # Asegura que solo se genere una boleta por clave
         self.ventana_abierta = True  # Estado de la ventana, si está abierta
@@ -178,6 +178,6 @@ class VistaUsuario(tk.Frame):
         self.entry_clave.update_idletasks()  # Asegurarse de que el campo se actualice
         self.entry_clave.focus_set()  # Enfocar el campo de clave nuevamente
 
-    def cerrar_ventana(self):
-        """Cierra la ventana sin cerrar la conexión a la base de datos."""
-        self.master.destroy()
+    def cerrar_ventana_usuario(self):
+        """Método para manejar el cierre de la ventana usuario."""
+        self.master.destroy() #solo cerrar la ventana
