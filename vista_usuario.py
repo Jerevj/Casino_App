@@ -167,9 +167,7 @@ class VistaUsuario(tk.Frame):
             self.boton_generar.config(state="normal")  # Habilitar el botón
 
     def mostrar_boleta_generada(self):
-        """Muestra el mensaje de éxito y habilita el botón nuevamente."""
-        self.update_idletasks()  # Forzar actualización de la UI
-        messagebox.showinfo("Éxito", "Boleta generada.")
+        '''Habilita el botón nuevamente despues de generar la boleta'''
         self.boton_generar.config(state="normal")  # Habilitar el botón nuevamente
 
     def limpiar_campo_clave(self):

@@ -111,8 +111,6 @@ class Minutas(tk.Frame):
                 estado = self.db_connection.cursor.fetchone()
                 if estado and estado[0] == 1:  # Solo mostrar si el estado es activo (1)
                     self.tree.insert('', 'end', values=row)
-                else:
-                    print(f"Empleado inactivo: {rut}")  # Mensaje de depuración
             
             self.tree.bind("<Double-1>", self.editar_celda)
 

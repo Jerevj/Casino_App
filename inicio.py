@@ -73,11 +73,20 @@ class Inicio(tk.Tk):
 
     def modo_administrador(self):
         """Lógica para abrir el modo administrador."""
-        if not any(isinstance(v, Login) for v in self.ventanas_abiertas):
-            nueva_ventana = Login(self, self.db_connection)
-            self.ventanas_abiertas.append(nueva_ventana)
+        nueva_ventana = Login(self, self.db_connection)
+        self.ventanas_abiertas.append(nueva_ventana)
 
-            nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(nueva_ventana))
+        nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(nueva_ventana))
+
+    def abrir_administracion(self):
+        """Lógica para abrir la ventana de administración después de un login exitoso."""
+        nueva_ventana = tk.Toplevel(self)
+        admin = Administracion(nueva_ventana, self.db_connection)
+        admin.pack(fill="both", expand=True)
+
+        self.ventanas_abiertas.append(nueva_ventana)  # Agregar a la lista
+
+        nueva_ventana.protocol("WM_DELETE_WINDOW", lambda: self.cerrar_ventana(nueva_ventana))
 
     def cerrar_ventana(self, ventana):
         """Método para manejar el cierre de cualquier ventana secundaria."""

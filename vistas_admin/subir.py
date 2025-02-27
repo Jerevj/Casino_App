@@ -1,9 +1,12 @@
+import filecmp
 import os
 import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox
 from datetime import datetime
 import pandas as pd
+import openpyxl
+from config import BACKUP_FOLDER
 from utils.excel_utils import excel_manager
 
 class Subir(tk.Frame):
@@ -14,7 +17,7 @@ class Subir(tk.Frame):
         self.menus_file_path = None
         self.current_minuta_file = excel_manager.obtener_ruta_minuta()
         self.current_menus_file = excel_manager.obtener_ruta_menus()
-        self.backup_folder = "backups"
+        self.backup_folder = BACKUP_FOLDER
         self.widgets()
 
     def widgets(self):
@@ -83,22 +86,79 @@ class Subir(tk.Frame):
             return
         self.procesar_archivo(self.menus_file_path, self.current_menus_file, "menus")
 
+    def validar_columnas(archivo, tipo):
+        if tipo == "minuta":
+            columnas_esperadas = ["RUT"] + [f"Día {i}" for i in range(1, 32)] + ["Nombre", "Mes"]
+        elif tipo == "menus":
+            columnas_esperadas = ["Fecha", "A", "B", "C"]
+        else:
+            messagebox.showerror("Error", "Tipo de archivo no reconocido.")
+            return False
+
+        try:
+            wb = openpyxl.load_workbook(archivo)
+            hoja = wb.active
+            columnas_archivo = [col.value for col in hoja[1] if col.value]  # Leer los nombres de las columnas
+
+            # Verificar si faltan columnas
+            columnas_faltantes = [col for col in columnas_esperadas if col not in columnas_archivo]
+
+            if columnas_faltantes:
+                messagebox.showerror("Error", f"Faltan columnas en el Excel: {', '.join(columnas_faltantes)}")
+                return False
+
+            return True  # Si todas las columnas están correctas
+
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al leer el archivo: {str(e)}")
+            return False
+
+    def es_excel_valido(self, archivo):
+        """Verifica si el archivo es un Excel válido y no está corrupto."""
+        try:
+            wb = openpyxl.load_workbook(archivo)
+            wb.close()
+            return True
+        except Exception:
+            return False
+
     def procesar_archivo(self, nuevo_archivo, archivo_actual, tipo):
         """Procesa el archivo seleccionado, realiza el respaldo y lo carga."""
         try:
+            # Verificar el formato de las columnas antes de procesar el archivo
+            '''if not self.validar_columnas(nuevo_archivo, tipo):
+                return '''
+            # Verificar si el archivo es un Excel válido
+            if not nuevo_archivo.endswith('.xlsx') and not nuevo_archivo.endswith('.xls'):
+                messagebox.showerror("Error", "El archivo seleccionado no es un archivo Excel válido.")
+                return
+            
+            if not self.es_excel_valido(nuevo_archivo):
+                messagebox.showerror("Error", "El archivo Excel está dañado o no tiene un formato válido.")
+                return
+
             # Convertir archivo .xls a .xlsx si es necesario
             if nuevo_archivo.endswith('.xls'):
                 nuevo_archivo = self.convertir_xls_a_xlsx(nuevo_archivo)
 
+            # Verificar si el nuevo archivo es idéntico al actual
+            if os.path.exists(archivo_actual) and filecmp.cmp(nuevo_archivo, archivo_actual, shallow=False):
+                messagebox.showinfo("Información", f"El archivo {tipo} es idéntico al existente. No se realizaron cambios.")
+                return  # No hacemos nada porque es el mismo archivo
+
+            # Crear carpeta de respaldo si no existe
             os.makedirs(self.backup_folder, exist_ok=True)
+
+            # Mover el archivo actual al respaldo antes de reemplazarlo
             if os.path.exists(archivo_actual):
                 backup_path = os.path.join(self.backup_folder, f"{tipo}_{self.obtener_mes_actual()}.xlsx")
                 shutil.move(archivo_actual, backup_path)
 
+            # Copiar el nuevo archivo a la ubicación del archivo actual
             shutil.copy(nuevo_archivo, archivo_actual)
             messagebox.showinfo("Éxito", f"El archivo {tipo} se ha cargado correctamente.")
-            
-            # Actualizar las rutas en ExcelManager
+
+            # Actualizar rutas en ExcelManager
             if tipo == "minuta":
                 excel_manager.minuta_file_path = archivo_actual
             elif tipo == "menus":
@@ -106,6 +166,7 @@ class Subir(tk.Frame):
 
             excel_manager.cargar_archivos()
             self.label_archivos.config(text=f"Archivo {tipo} cargado con éxito.", fg="green")
+
         except Exception as e:
             messagebox.showerror("Error", f"Hubo un problema al cargar el archivo {tipo}:\n{e}")
 
