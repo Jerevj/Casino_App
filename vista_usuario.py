@@ -59,7 +59,7 @@ class VistaUsuario(tk.Frame):
 
     def agregar_digit(self, digit):
         """Agrega un dígito al campo de la clave."""
-        if len(self.entry_clave.get()) < 4:  # Limitar a 4 dígitos
+        if len(self.entry_clave.get()) < 11:  # Limitar a 11 dígitos
             self.entry_clave.insert(tk.END, digit)
 
     def borrar_digit(self):
