@@ -12,8 +12,9 @@ BACKUP_FOLDER = "C:/Users/practicainformatica/Desktop/CarpetaExcel/archivos_ante
 
 
 # Configuraciones de la base de datos
-DB_HOST = "localhost"
+DB_HOST = "192.168.10.101"
 DB_USER = "root"
-DB_PASSWORD = "admin"
+DB_PASSWORD = "123"
 DB_NAME = "casino"
 PORT=3306
+CHARSET='utf8'

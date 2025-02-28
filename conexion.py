@@ -1,6 +1,6 @@
 import mysql.connector
 from mysql.connector import Error
-from config import DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, PORT
+from config import CHARSET, DB_HOST, DB_NAME, DB_PASSWORD, DB_USER, PORT
 
 class Conexion:
     def __init__(self):
@@ -17,7 +17,8 @@ class Conexion:
                     user=DB_USER,
                     password=DB_PASSWORD,
                     database=DB_NAME,
-                    port=PORT
+                    port=PORT,
+                    charset=CHARSET 
                 )
                 self.cursor = self.conexion.cursor()
                 print("Conexión obtenida.")
