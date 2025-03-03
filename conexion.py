@@ -22,6 +22,8 @@ class Conexion:
                 )
                 self.cursor = self.conexion.cursor()
                 print("Conexión obtenida.")
+            else:
+                print("Ya esta conectado")
         except Error as e:
             print(f"Error al obtener conexión: {e}")
             self.conexion = None
@@ -31,9 +33,11 @@ class Conexion:
         """Cierra la conexión con la base de datos."""
         if self.cursor:
             self.cursor.close()
+            print("Cursor cerrado.")
         if self.conexion:
             self.conexion.close()
-        print("Conexión cerrada.")
+            print("Conexión cerrada.")
+        print("Desconexion completa.")
 
     def obtener_persona_por_rut(self, rut):
         """Obtiene una persona por su RUT."""
