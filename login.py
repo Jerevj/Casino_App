@@ -42,6 +42,10 @@ class Login(tk.Toplevel):
         try:
             # Usar la conexión pasada desde inicio.py
             cursor = self.db_connection.cursor  # No usar paréntesis aquí
+            if cursor is None:
+                messagebox.showerror("Error de Conexión", "El cursor de la base de datos no está disponible.")
+                return
+
             cursor.execute("SELECT clave, usuario FROM usuarios WHERE usuario = %s", (usuario,))
             resultado = cursor.fetchone()
 
